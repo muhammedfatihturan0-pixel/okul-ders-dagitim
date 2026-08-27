@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="🏫"
 )
 
-# Temiz, Kontrastı Sabit ve Çıktı / Print Uyumlu CSS
+# Kontrastı Yüksek, Net UI Stili
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -24,7 +24,6 @@ st.markdown("""
         color: #0f172a;
     }
     
-    /* Input ve Selectbox Renk Sabitleme */
     input, textarea, select, [data-baseweb="input"] > div, [data-baseweb="base-input"] > input, div[data-baseweb="select"] > div {
         background-color: #ffffff !important;
         color: #0f172a !important;
@@ -223,7 +222,7 @@ if "sonuclar" not in st.session_state:
 
 if "bildirimler" not in st.session_state:
     st.session_state["bildirimler"] = [
-        {"tarih": "2026-08-27", "baslik": "v3.0 - Excel Nöbet Yerleri & Güvenli İletişim", "icerik": "Nöbet yerleri Excel şablonuna dahil edildi ve okul hata bildirimleri doğrudan e-posta yönlendirmesine bağlandı."}
+        {"tarih": "2026-08-27", "baslik": "v3.1 - Otomatik Saat & Esnek Gün Hesaplama", "icerik": "Blok seçiminden saat otomatik çekilmeye başlandı ve gün bazlı esnek saatler tamamen optimize edildi."}
     ]
 
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
@@ -250,13 +249,17 @@ with st.sidebar:
 
     st.markdown("---")
     st.subheader("⚙️ Günlük Ders Saatleri")
+    st.caption("Okulunuzda hangi gün kaç saat ders varsa buradan belirleyin:")
     
     gunluk_saatler = {}
-    gunluk_saatler["Pazartesi"] = st.slider("Pazartesi Saati", 5, 10, 8)
-    gunluk_saatler["Salı"] = st.slider("Salı Saati", 5, 10, 7)
-    gunluk_saatler["Çarşamba"] = st.slider("Çarşamba Saati", 5, 10, 7)
-    gunluk_saatler["Perşembe"] = st.slider("Perşembe Saati", 5, 10, 7)
-    gunluk_saatler["Cuma"] = st.slider("Cuma Saati", 5, 10, 7)
+    gunluk_saatler["Pazartesi"] = st.number_input("Pazartesi Saati", min_value=4, max_value=10, value=8, step=1)
+    gunluk_saatler["Salı"] = st.number_input("Salı Saati", min_value=4, max_value=10, value=7, step=1)
+    gunluk_saatler["Çarşamba"] = st.number_input("Çarşamba Saati", min_value=4, max_value=10, value=7, step=1)
+    gunluk_saatler["Perşembe"] = st.number_input("Perşembe Saati", min_value=4, max_value=10, value=7, step=1)
+    gunluk_saatler["Cuma"] = st.number_input("Cuma Saati", min_value=4, max_value=10, value=7, step=1)
+    
+    haftalik_toplam_kapasite = sum(gunluk_saatler.values())
+    st.info(f"📌 Haftalık Toplam Kapasite: **{haftalik_toplam_kapasite} Saat**")
 
 # Üst Banner
 st.markdown("""
@@ -314,7 +317,6 @@ if st.session_state["sayfa"] == "Veri":
                 df_d = pd.read_excel(xls, sheet_name="Ders_Listesi").fillna("")
                 df_o = pd.read_excel(xls, sheet_name="Ogretmen_Nobet").fillna("")
                 
-                # Nöbet Yerleri sayfasını kontrol et ve yükle
                 if "Nobet_Yerleri" in xls.sheet_names:
                     df_y = pd.read_excel(xls, sheet_name="Nobet_Yerleri").fillna("")
                     yerler = [str(r).strip() for r in df_y["Nöbet Yeri Adı"].tolist() if str(r).strip()]
@@ -345,7 +347,7 @@ if st.session_state["sayfa"] == "Veri":
 
     st.markdown("---")
 
-    # Manuel Ders Ekleme
+    # Otomatik Toplam Saat Hesaplayan Manuel Ders Ekleme
     with st.expander("➕ Ekrandan Hızlı Ders Ekle / Sil", expanded=False):
         c1, c2, c3, c4, c5 = st.columns([1.5, 2, 2.5, 2, 1.5])
         with c1:
@@ -355,7 +357,8 @@ if st.session_state["sayfa"] == "Veri":
         with c3:
             in_ogr = st.text_input("Öğretmen", placeholder="Örn: Selin Korkmaz")
         with c4:
-            in_blok = st.selectbox("Blok", ["2+2+2", "2+2", "2+2+1", "2+1", "2", "1"])
+            in_blok = st.selectbox("Saat Dağılımı (Blok)", ["2+2+2 (6 Sa)", "2+2 (4 Sa)", "2+2+1 (5 Sa)", "2+1 (3 Sa)", "2 (2 Sa)", "1 (1 Sa)", "3+3 (6 Sa)", "3 (3 Sa)"])
+            temiz_blok = in_blok.split(" ")[0]
         with c5:
             st.write("")
             st.write("")
@@ -365,7 +368,7 @@ if st.session_state["sayfa"] == "Veri":
                         "Sınıf": in_sinif.strip().upper(),
                         "Ders": in_ders.strip(),
                         "Öğretmen": in_ogr.strip(),
-                        "Saat Dağılımı": in_blok
+                        "Saat Dağılımı": temiz_blok
                     })
                     if in_ogr.strip() not in st.session_state["ogretmen_tercih"]:
                         st.session_state["ogretmen_tercih"][in_ogr.strip()] = {"nobet": "Otomatik", "yer": st.session_state["nobet_yerleri"][0], "bos": "", "zaman": "Tüm Gün", "muaf": False}
@@ -609,7 +612,7 @@ if st.session_state["sayfa"] == "Veri":
                     st.success("✓ Ders ve Nöbet Programı Başarıyla Oluşturuldu!")
                 else:
                     st.session_state["sonuclar"] = None
-                    st.error("✗ Çakışmasız çözüm bulunamadı. Lütfen kısıtları kontrol edin.")
+                    st.error("✗ Çakışmasız çözüm bulunamadı. Lütfen kısıtları ve saat sınırlarını kontrol edin.")
 
     # İSTATİSTİK PANELİ
     if st.session_state["sonuclar"]:
@@ -739,7 +742,7 @@ elif st.session_state["sayfa"] == "Öğretmenler":
                     st.markdown(html, unsafe_allow_html=True)
         
         with tab_toplu:
-            st.info("💡 **İpucu:** Aşağıdaki 'Tüm Okulu Yazdır' butonuna bastıktan sonra veya tarayıcınızdan **Ctrl + P** yaparak tüm öğretmenlerin programlarını tek seferde A4 çıktısı alabilirsiniz.")
+            st.info("💡 **İpucu:** Aşağıdaki butona bastıktan sonra veya tarayıcınızdan **Ctrl + P** yaparak tüm öğretmenlerin programlarını tek seferde A4 çıktısı alabilirsiniz.")
             st.button("🖨️ Tüm Öğretmenleri Yazdır (PDF / Çıktı)", use_container_width=True)
             
             tum_ogretmenler_html = ""
@@ -905,7 +908,7 @@ elif st.session_state["sayfa"] == "Nöbet":
         st.info("Lütfen önce 'Veri & Kısıt Yönetimi' menüsünden programı hesaplayın.")
 
 # ==========================================
-# 6. HATA & TALEP BİLDİR (GÜVENLİ E-POSTA BAĞLANTISI)
+# 6. HATA & TALEP BİLDİR
 # ==========================================
 elif st.session_state["sayfa"] == "HataBildir":
     st.subheader("💬 Okul Hata, Sorun & Talep Bildirim Merkezi")
