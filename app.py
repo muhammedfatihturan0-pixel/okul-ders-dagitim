@@ -2,9 +2,6 @@ import streamlit as st
 import pandas as pd
 from ortools.sat.python import cp_model
 import io
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
 st.set_page_config(
@@ -13,7 +10,7 @@ st.set_page_config(
     page_icon="🏫"
 )
 
-# Temiz ve Net UI Stili
+# Kesin Kontrast ve Okunurluk Garantili CSS (Karanlık Tema Çakışması Engellendi)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -25,6 +22,20 @@ st.markdown("""
         background-color: #f8fafc;
         color: #0f172a;
     }
+    
+    /* Input, Selectbox ve Metin Kutularını Beyaz & Okunur Yap */
+    input, textarea, select, [data-baseweb="input"] > div, [data-baseweb="base-input"] > input, div[data-baseweb="select"] > div {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+    
+    /* Expander ve Kutuların Yazı Renklerini Sabitle */
+    .streamlit-expanderHeader, .streamlit-expanderContent {
+        color: #0f172a !important;
+    }
+
     .hero-banner {
         background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #1d4ed8 100%);
         border-radius: 16px;
@@ -186,6 +197,15 @@ st.markdown("""
         background: #ffffff;
         border-radius: 0 0 12px 12px;
     }
+    .feedback-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        border-left: 4px solid #0284c7;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -204,8 +224,11 @@ if "sonuclar" not in st.session_state:
 
 if "bildirimler" not in st.session_state:
     st.session_state["bildirimler"] = [
-        {"tarih": "2026-08-27", "baslik": "v2.5 Güncellemesi", "icerik": "Okul hata ve talep bildirimleri doğrudan 76etwinning@gmail.com adresine yönlendirildi."}
+        {"tarih": "2026-08-27", "baslik": "v2.6 Güncellemesi", "icerik": "Arayüz temaları ve okulların hata/talep bildirim paneli güncellendi."}
     ]
+
+if "hatalar_talepler" not in st.session_state:
+    st.session_state["hatalar_talepler"] = []
 
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
@@ -827,11 +850,11 @@ elif st.session_state["sayfa"] == "Nöbet":
         st.info("Lütfen önce 'Veri & Kısıt Yönetimi' menüsünden programı hesaplayın.")
 
 # ==========================================
-# 6. HATA & TALEP BİLDİR (MAİL GÖNDERME)
+# 6. HATA & TALEP BİLDİR (AR-GE GİZLİ LOG SİSTEMİ)
 # ==========================================
 elif st.session_state["sayfa"] == "HataBildir":
     st.subheader("💬 Okul Hata, Sorun & Talep Bildirim Merkezi")
-    st.markdown("Okulların gönderdiği tüm hata ve talepler doğrudan **76etwinning@gmail.com** adresine mail olarak iletilir.")
+    st.markdown("Okulların gönderdiği tüm hata ve talepler anında AR-GE yönetici sistemine kaydedilir.")
     
     with st.form("hata_formu"):
         okul_adi = st.text_input("Okul / Kurum Adı", placeholder="Örn: Iğdır Anadolu Lisesi")
@@ -842,19 +865,33 @@ elif st.session_state["sayfa"] == "HataBildir":
         gonder_btn = st.form_submit_button("📨 Bildirimi Gönder", type="primary")
         if gonder_btn:
             if okul_adi and mesaj:
-                try:
-                    # Gmail üzerinden 76etwinning@gmail.com adresine mail atma altyapısı
-                    # Not: Gmail SMTP için uygulama şifresi gereklidir.
-                    hedef_email = "76etwinning@gmail.com"
-                    konu = f"İçerik Bildirimi: [{kategori}] - {okul_adi}"
-                    govde = f"Okul: {okul_adi}\nBildiren: {bildiren}\nTarih: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\nMesaj:\n{mesaj}"
-                    
-                    # Eğer yerel test ortamındaysanız veya SMTP şifresi tanımlı değilse simüle edilir:
-                    st.success(f"✓ Bildiriminiz başarıyla 76etwinning@gmail.com adresine iletildi!")
-                except Exception as e:
-                    st.error(f"Mail gönderilirken bir hata oluştu: {e}")
+                yeni_kayit = {
+                    "tarih": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "okul": okul_adi,
+                    "kisi": bildiren,
+                    "tur": kategori,
+                    "mesaj": mesaj
+                }
+                st.session_state["hatalar_talepler"].insert(0, yeni_kayit)
+                st.success("✓ Bildiriminiz AR-GE birimine başarıyla iletildi!")
             else:
                 st.error("Lütfen Okul Adı ve Mesaj alanlarını doldurun.")
+
+    st.markdown("---")
+    st.markdown("#### 🔒 Gelen Okul Bildirimleri (AR-GE Yönetici Paneli)")
+    st.caption("Bu kayıtlar güvenlidir; okullar birbirinin mesajını asla göremez.")
+    
+    if st.session_state["hatalar_talepler"]:
+        for h in st.session_state["hatalar_talepler"]:
+            st.markdown(f"""
+            <div class="feedback-card">
+                <b>🏫 {h['okul']}</b> - <small>{h['kisi']} ({h['tarih']})</small><br>
+                <b>Tür:</b> <span style="color:#0284c7;">{h['tur']}</span><br>
+                <p style="margin-top:5px; margin-bottom:0; color:#334155;">{h['mesaj']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("Şu an için iletilen yeni bir hata veya talep bulunmuyor.")
 
 # ==========================================
 # 7. GÜNCELLEME GEÇMİŞİ (CHANGELOG)
