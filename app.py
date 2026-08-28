@@ -52,243 +52,7 @@ def bildirimleri_getir():
             return []
     return []
 
-# Modern Kurumsal Stil
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-    }
-    .stApp {
-        background-color: #f8fafc;
-        color: #0f172a;
-    }
-    
-    .login-wrapper {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        padding: 35px 30px;
-        box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.08);
-        text-align: center;
-        margin-top: 10px;
-    }
-    .meb-logo-svg {
-        width: 90px;
-        height: 90px;
-        margin-bottom: 12px;
-    }
-    .login-title {
-        font-size: 22px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0;
-    }
-    .login-subtitle {
-        font-size: 14px;
-        color: #0284c7;
-        font-weight: 700;
-        margin-top: 6px;
-    }
-    .login-desc {
-        font-size: 13px;
-        color: #64748b;
-        margin-top: 2px;
-        margin-bottom: 20px;
-    }
-    
-    .update-container {
-        margin-top: 30px;
-        padding: 22px;
-        background: #ffffff;
-        border-radius: 16px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-    .update-item {
-        border-left: 4px solid #0284c7;
-        background: #f8fafc;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
-
-    input, textarea, select, [data-baseweb="input"] > div, [data-baseweb="base-input"] > input, div[data-baseweb="select"] > div {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        -webkit-text-fill-color: #0f172a !important;
-        border-color: #cbd5e1 !important;
-    }
-    .hero-banner {
-        background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #1d4ed8 100%);
-        border-radius: 16px;
-        padding: 22px 30px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: #ffffff;
-    }
-    .hero-title {
-        font-size: 22px;
-        font-weight: 800;
-        margin: 0;
-        color: #ffffff !important;
-    }
-    .hero-desc {
-        color: #e0f2fe;
-        font-size: 13px;
-        margin-top: 4px;
-    }
-    .badge-arge {
-        background: #ffffff;
-        color: #0284c7;
-        padding: 6px 16px;
-        border-radius: 30px;
-        font-size: 12px;
-        font-weight: 800;
-    }
-    .stButton > button {
-        background-color: #ffffff !important;
-        color: #1e293b !important;
-        border: 1px solid #cbd5e1 !important;
-        font-weight: 700 !important;
-        border-radius: 8px !important;
-    }
-    .stButton > button:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
-    }
-    .stDownloadButton > button {
-        background-color: #2563eb !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        border: none !important;
-        border-radius: 8px !important;
-    }
-    .metric-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 16px;
-        text-align: center;
-        box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.03);
-    }
-    .metric-val {
-        font-size: 24px;
-        font-weight: 800;
-        color: #0284c7;
-    }
-    .metric-lbl {
-        font-size: 11px;
-        font-weight: 700;
-        color: #64748b;
-        text-transform: uppercase;
-    }
-    table.schedule-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 6px;
-        margin-top: 15px;
-    }
-    table.schedule-table th {
-        background: #1e293b;
-        color: #ffffff;
-        text-align: center;
-        padding: 10px 6px;
-        font-size: 13px;
-        font-weight: 700;
-        border-radius: 6px;
-    }
-    table.schedule-table td {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 6px;
-        text-align: center;
-        font-size: 12px;
-        height: 55px;
-    }
-    table.schedule-table td.day-cell {
-        background: #f1f5f9;
-        font-weight: 700;
-        color: #1e293b;
-        width: 110px;
-    }
-    .lesson-box {
-        background: #f0f9ff;
-        border: 1px solid #bae6fd;
-        border-radius: 6px;
-        padding: 5px;
-        color: #0369a1;
-        font-weight: 600;
-    }
-    .lesson-box small {
-        color: #0284c7;
-        display: block;
-        margin-top: 2px;
-        font-weight: 500;
-    }
-    .nobet-col-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 4px 12px -2px rgba(0,0,0,0.03);
-        border-top: 4px solid #0ea5e9;
-    }
-    .nobet-title {
-        font-size: 15px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .nobet-teacher-pill {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 8px 12px;
-        margin-bottom: 8px;
-        font-size: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .location-tag {
-        background: #e0f2fe;
-        color: #0369a1;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
-    }
-    .signature-container {
-        margin-top: 20px;
-        display: flex;
-        justify-content: space-between;
-        padding: 15px 40px;
-        border-top: 2px dashed #cbd5e1;
-        background: #ffffff;
-    }
-    @media print {
-        .hero-banner, .stSidebar, .stButton, header, footer, .stDownloadButton, [data-testid="stSidebarNav"] {
-            display: none !important;
-        }
-        .page-break {
-            page-break-after: always;
-            break-after: page;
-            padding-top: 20px;
-        }
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Oturum Durumu
+# Oturum Durumu Başlatma
 if "giris_yapildi" not in st.session_state:
     st.session_state["giris_yapildi"] = False
 
@@ -319,40 +83,26 @@ if "aylik_nobet_gecmisi" not in st.session_state:
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
 tum_bildirimler = [
-    {"tarih": "2026-08-28", "baslik": "v3.6 - Iğdır AR-GE Kurumsal Kimlik & Gömülü Logo", "icerik": "Giriş ekranı Iğdır İl MEM AR-GE kurumsal kimliğine uyarlandı, resmî vektörel logo gömüldü."},
-    {"tarih": "2026-08-28", "baslik": "v3.5 - Eşit Dağıtımlı Aylık Nöbet & Gizli Yönetici Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli AR-GE gelen kutusu eklendi."},
+    {"tarih": "2026-08-28", "baslik": "v3.6 - Temiz Kurumsal Arayüz", "icerik": "Giriş ekranı ve logo render hataları giderildi, kurumsal yapı stabilize edildi."},
+    {"tarih": "2026-08-28", "baslik": "v3.5 - Eşit Dağıtımlı Aylık Nöbet & Gizli AR-GE Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli AR-GE gelen kutusu eklendi."},
     {"tarih": "2026-08-28", "baslik": "v3.4 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul profili sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızaya kaydediliyor."},
     {"tarih": "2026-08-27", "baslik": "v3.3 - Akıllı Haftalık Saat Dağıtımı", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."}
 ]
-
-# MEB Resmî Vektörel Logosu (SVG)
-MEB_SVG_LOGO = """
-<svg class="meb-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="46" fill="#e11d48"/>
-    <circle cx="50" cy="50" r="41" stroke="#ffffff" stroke-width="2"/>
-    <path d="M50 24L52 30H58L53 34L55 40L50 36L45 40L47 34L42 30H48L50 24Z" fill="#ffffff"/>
-    <path d="M50 42C43 42 34 46 28 52C28 66 38 72 50 78C62 72 72 66 72 52C66 46 57 42 50 42Z" fill="#ffffff"/>
-    <path d="M50 46C56 46 64 49 68 54C67 64 59 69 50 74C41 69 33 64 32 54C36 49 44 46 50 46Z" fill="#e11d48"/>
-    <path d="M50 50V68M42 54C45 56 48 57 50 57C52 57 55 56 58 54M43 60C46 62 48 63 50 63C52 63 54 62 57 60" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
-</svg>
-"""
 
 # ==========================================
 # GİRİŞ EKRANI
 # ==========================================
 if not st.session_state["giris_yapildi"]:
-    col_l1, col_l2, col_l3 = st.columns([1, 1.8, 1])
-    with col_l2:
-        st.markdown(f"""
-        <div class="login-wrapper">
-            {MEB_SVG_LOGO}
-            <h1 class="login-title">Iğdır İl Millî Eğitim Müdürlüğü</h1>
-            <div class="login-subtitle">AR-GE BİRİMİ</div>
-            <div class="login-desc">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
-        </div>
-        """, unsafe_allow_html=True)
+    _, col_main, _ = st.columns([1, 2, 1])
+    with col_main:
+        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Meb.png/180px-Meb.png", width=100)
+        st.title("Iğdır İl Millî Eğitim Müdürlüğü")
+        st.subheader("AR-GE BİRİMİ")
+        st.caption("Akıllı Okul Ders & Nöbet Dağıtım Sistemi")
+        st.markdown("</div>", unsafe_allow_html=True)
         
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("---")
         girilen_kod = st.text_input("MEB Kurum Kodu", placeholder="Kurum kodunu yazınız...")
         girilen_okul = st.text_input("Kurum İsmi", placeholder="Kurumun tam adını yazınız...")
         
@@ -376,24 +126,12 @@ if not st.session_state["giris_yapildi"]:
             else:
                 st.error("Lütfen MEB Kurum Kodu ve Kurum İsmi alanlarını doldurun.")
 
-        # Ana Sayfa Altı Son 4 Güncelleme
-        st.markdown("""
-        <div class="update-container">
-            <h4 style="margin:0 0 15px 0; color:#0f172a; font-size:16px;">📢 Son Sistem Güncellemeleri & Duyurular</h4>
-        """, unsafe_allow_html=True)
-        
+        st.markdown("---")
+        st.markdown("#### 📢 Son Sistem Güncellemeleri & Duyurular")
         for b in tum_bildirimler[:4]:
-            st.markdown(f"""
-            <div class="update-item">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <b style="color:#0f172a; font-size:13px;">{b['baslik']}</b>
-                    <small style="color:#64748b; font-weight:600;">{b['tarih']}</small>
-                </div>
-                <p style="color:#334155; font-size:12px; margin:4px 0 0 0;">{b['icerik']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        st.markdown("</div>", unsafe_allow_html=True)
+            with st.container():
+                st.markdown(f"**{b['baslik']}** — *{b['tarih']}*")
+                st.caption(b['icerik'])
         
     st.stop()
 
@@ -411,7 +149,6 @@ for d in st.session_state["dersler"]:
 
 max_sinif_yuku = max(sinif_yukleri.values()) if sinif_yukleri else 35
 
-# Sol Menü
 with st.sidebar:
     st.markdown(f"### 🏫 {st.session_state['okul_adi']}")
     st.caption(f"Kurum Kodu: **{st.session_state['kurum_kodu']}**")
@@ -448,14 +185,13 @@ with st.sidebar:
 
     gunluk_saatler = {g: (taban_saat + 1) if g in artik_gunler else taban_saat for g in gunler}
 
-# Üst Banner
 st.markdown(f"""
-<div class="hero-banner">
+<div style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #1d4ed8 100%); border-radius: 12px; padding: 18px 24px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
-        <h1 class="hero-title">{st.session_state['okul_adi']}</h1>
-        <div class="hero-desc">Akıllı Okul Planlama Sistemi • Kurum Kodu: {st.session_state['kurum_kodu']}</div>
+        <h3 style="margin: 0; color: white;">{st.session_state['okul_adi']}</h3>
+        <span style="font-size: 13px; color: #e0f2fe;">Akıllı Okul Planlama Sistemi • Kurum Kodu: {st.session_state['kurum_kodu']}</span>
     </div>
-    <div class="badge-arge">Iğdır İl MEM AR-GE</div>
+    <div style="background: white; color: #0284c7; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 12px;">Iğdır MEM AR-GE</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -551,7 +287,6 @@ if st.session_state["sayfa"] == "Veri":
 
     st.markdown("---")
 
-    # Manuel Ders Ekleme
     with st.expander("➕ Ekrandan Hızlı Tekil Ders Ekle", expanded=False):
         c1, c2, c3, c4, c5 = st.columns([1.5, 2, 2.5, 2, 1.5])
         with c1:
@@ -576,7 +311,6 @@ if st.session_state["sayfa"] == "Veri":
                     })
                     st.rerun()
 
-    # Yüklü Dersler Listesi
     c_th1, c_th2 = st.columns([4, 1])
     with c_th1:
         st.markdown(f"##### 📋 Tanımlı Ders Listesi ({len(st.session_state['dersler'])} Ders)")
@@ -597,7 +331,6 @@ if st.session_state["sayfa"] == "Veri":
             df_goster = df_dersler
         st.dataframe(df_goster, use_container_width=True, hide_index=True)
 
-    # Kısıtlar
     if st.session_state["dersler"]:
         with st.expander("🛡️ Öğretmen İzin & Zaman Kısıtları", expanded=False):
             ogr_filtre = st.text_input("🔍 Öğretmen Ara:", placeholder="İsim...", key="filter_ogr_kisit")
@@ -627,14 +360,12 @@ if st.session_state["sayfa"] == "Veri":
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # HESAPLA BUTONU
     if st.button("🚀 Çakışmasız Ders Programını Hesapla ve Okul Hafızasına Kaydet", type="primary", use_container_width=True):
         dersler = [d for d in st.session_state["dersler"] if str(d.get("Sınıf","")).strip() and str(d.get("Öğretmen","")).strip()]
         if not dersler:
             st.error("Lütfen önce ders verisi ekleyin.")
         else:
             with st.spinner("Optimizasyon motoru çalışıyor..."):
-                gun_sayisi = len(gunler)
                 gun_baslangic = {}
                 toplam_saat = 0
                 for g in gunler:
@@ -660,7 +391,6 @@ if st.session_state["sayfa"] == "Veri":
                     for t in range(toplam_saat):
                         x[(b_idx, t)] = model.NewBoolVar(f"b_{b_idx}_t_{t}")
 
-                # 1. Blok Kısıtları
                 for b_idx, blok in enumerate(blok_listesi):
                     gecerli = []
                     for g in gunler:
@@ -673,7 +403,6 @@ if st.session_state["sayfa"] == "Veri":
                         if t not in gecerli:
                             model.Add(x[(b_idx, t)] == 0)
 
-                # 2. Sınıf ve Öğretmen Çakışması
                 for s in siniflar:
                     for t in range(toplam_saat):
                         model.Add(sum([x[(b_idx, t - off)] for b_idx, blok in enumerate(blok_listesi) if blok["sinif"] == s for off in range(blok["sure"]) if t - off >= 0]) <= 1)
@@ -682,7 +411,6 @@ if st.session_state["sayfa"] == "Veri":
                     for t in range(toplam_saat):
                         model.Add(sum([x[(b_idx, t - off)] for b_idx, blok in enumerate(blok_listesi) if blok["ogretmen"] == ogr for off in range(blok["sure"]) if t - off >= 0]) <= 1)
 
-                # 3. Kesintisiz Ders Kuralı
                 for s in siniflar:
                     for g in gunler:
                         g_bas = gun_baslangic[g]
@@ -693,7 +421,6 @@ if st.session_state["sayfa"] == "Veri":
                             akt_p = sum([x[(b_idx, (t-1) - off)] for b_idx, blok in enumerate(blok_listesi) if blok["sinif"] == s for off in range(blok["sure"]) if (t-1) - off >= 0])
                             model.Add(akt_t <= akt_p)
 
-                # 4. Boş Gün & Zaman Kısıtları
                 for ogr in ogretmenler:
                     trc = st.session_state["ogretmen_tercih"].get(ogr, {})
                     bos_g = trc.get("bos", "")
@@ -747,8 +474,8 @@ if st.session_state["sayfa"] == "Veri":
                             for b_idx, blok in enumerate(blok_listesi):
                                 for off in range(blok["sure"]):
                                     if t - off >= 0 and solver.Value(x[(b_idx, t - off)]) == 1:
-                                        sonuclar["sinif"][blok["sinif"]][gun][saat] = f"<div class='lesson-box'>{blok['ders']}<small>{blok['ogretmen']}</small></div>"
-                                        sonuclar["ogretmen"][blok["ogretmen"]][gun][saat] = f"<div class='lesson-box'>{blok['sinif']}<small>{blok['ders']}</small></div>"
+                                        sonuclar["sinif"][blok["sinif"]][gun][saat] = f"<div style='background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:4px; color:#0369a1; font-weight:600;'>{blok['ders']}<small style='display:block; color:#0284c7;'>{blok['ogretmen']}</small></div>"
+                                        sonuclar["ogretmen"][blok["ogretmen"]][gun][saat] = f"<div style='background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:4px; color:#0369a1; font-weight:600;'>{blok['sinif']}<small style='display:block; color:#0284c7;'>{blok['ders']}</small></div>"
                                         sonuclar["ogretmen_gunluk_ders"][blok["ogretmen"]][gun] += 1
                     
                     st.session_state["sonuclar"] = sonuclar
@@ -785,16 +512,16 @@ elif st.session_state["sayfa"] == "Sınıflar":
             with c_s2:
                 secili_s = st.selectbox("Sınıf Seçin:", filtrelenen_siniflar)
             if secili_s:
-                html = f"<table class='schedule-table'><tr><th>Gün</th>" + "".join([f"<th>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
+                html = "<table style='width:100%; border-collapse:separate; border-spacing:6px;'><tr><th style='background:#1e293b; color:white; padding:10px; border-radius:6px;'>Gün</th>" + "".join([f"<th style='background:#1e293b; color:white; padding:10px; border-radius:6px;'>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
                 for g in gunler:
                     g_saat = g_saatler[g]
-                    html += f"<tr><td class='day-cell'>{g} ({g_saat} Sa)</td>"
+                    html += f"<tr><td style='background:#f1f5f9; font-weight:700; text-align:center; padding:8px; border-radius:6px;'>{g} ({g_saat} Sa)</td>"
                     for sa in range(max_saat):
                         if sa < g_saat:
                             val = sonuclar["sinif"][secili_s][g][sa]
-                            html += f"<td>{val if val else '-'}</td>"
+                            html += f"<td style='background:white; border:1px solid #e2e8f0; text-align:center; padding:6px; border-radius:6px; height:50px;'>{val if val else '-'}</td>"
                         else:
-                            html += "<td style='background:#f8fafc; color:#cbd5e1;'>-</td>"
+                            html += "<td style='background:#f8fafc; border:1px solid #e2e8f0; text-align:center; padding:6px; border-radius:6px; color:#cbd5e1;'>-</td>"
                     html += "</tr>"
                 html += "</table>"
                 st.markdown(html, unsafe_allow_html=True)
@@ -830,20 +557,20 @@ elif st.session_state["sayfa"] == "Öğretmenler":
                     toplam_ogr_ders = sum(sonuclar["ogretmen_gunluk_ders"][secili_o].values())
                     st.markdown(f"**Öğretmen:** {secili_o} | **Haftalık Ders Yükü:** {toplam_ogr_ders} Saat")
                     
-                    html = f"<table class='schedule-table'><tr><th>Gün</th>" + "".join([f"<th>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
+                    html = "<table style='width:100%; border-collapse:separate; border-spacing:6px;'><tr><th style='background:#1e293b; color:white; padding:10px; border-radius:6px;'>Gün</th>" + "".join([f"<th style='background:#1e293b; color:white; padding:10px; border-radius:6px;'>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
                     for g in gunler:
                         g_saat = g_saatler[g]
-                        html += f"<tr><td class='day-cell'>{g}</td>"
+                        html += f"<tr><td style='background:#f1f5f9; font-weight:700; text-align:center; padding:8px; border-radius:6px;'>{g}</td>"
                         for sa in range(max_saat):
                             if sa < g_saat:
                                 val = sonuclar["ogretmen"][secili_o][g][sa]
-                                html += f"<td>{val if val else '-'}</td>"
+                                html += f"<td style='background:white; border:1px solid #e2e8f0; text-align:center; padding:6px; border-radius:6px; height:50px;'>{val if val else '-'}</td>"
                             else:
-                                html += "<td style='background:#f8fafc; color:#cbd5e1;'>-</td>"
+                                html += "<td style='background:#f8fafc; border:1px solid #e2e8f0; text-align:center; padding:6px; border-radius:6px; color:#cbd5e1;'>-</td>"
                         html += "</tr>"
                     html += "</table>"
                     html += f"""
-                    <div class="signature-container">
+                    <div style="margin-top:20px; display:flex; justify-content:space-between; padding:15px 40px; border-top:2px dashed #cbd5e1; background:white;">
                         <div style="text-align: center;"><b>Teslim Eden</b><br>{st.session_state['okul_adi']} Müdürü<br>İmza / Mühür</div>
                         <div style="text-align: center;"><b>Tebliğ Aldım</b><br>{secili_o}<br>Tarih: ..... / ..... / 202...</div>
                     </div>
@@ -856,25 +583,25 @@ elif st.session_state["sayfa"] == "Öğretmenler":
             for o in sonuclar["ogretmenler"]:
                 toplam_ogr_ders = sum(sonuclar["ogretmen_gunluk_ders"][o].values())
                 tum_ogretmenler_html += f"""
-                <div class="page-break">
+                <div style="page-break-after: always; padding-top: 15px;">
                     <div style="border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between;">
                         <span style="font-size: 16px; font-weight: 800;">{st.session_state['okul_adi']} - Öğretmen: {o}</span>
                         <span><b>Yük:</b> {toplam_ogr_ders} Saat</span>
                     </div>
-                    <table class='schedule-table'><tr><th>Gün</th>""" + "".join([f"<th>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
+                    <table style='width:100%; border-collapse:separate; border-spacing:6px;'><tr><th style='background:#1e293b; color:white; padding:8px; border-radius:6px;'>Gün</th>""" + "".join([f"<th style='background:#1e293b; color:white; padding:8px; border-radius:6px;'>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
                 for g in gunler:
                     g_saat = g_saatler[g]
-                    tum_ogretmenler_html += f"<tr><td class='day-cell'>{g}</td>"
+                    tum_ogretmenler_html += f"<tr><td style='background:#f1f5f9; font-weight:700; text-align:center; padding:6px; border-radius:6px;'>{g}</td>"
                     for sa in range(max_saat):
                         if sa < g_saat:
                             val = sonuclar["ogretmen"][o][g][sa]
-                            tum_ogretmenler_html += f"<td>{val if val else '-'}</td>"
+                            tum_ogretmenler_html += f"<td style='background:white; border:1px solid #e2e8f0; text-align:center; padding:6px; border-radius:6px;'>{val if val else '-'}</td>"
                         else:
-                            tum_ogretmenler_html += "<td style='background:#f8fafc; color:#cbd5e1;'>-</td>"
+                            tum_ogretmenler_html += "<td style='background:#f8fafc; border:1px solid #e2e8f0; text-align:center; padding:6px; border-radius:6px; color:#cbd5e1;'>-</td>"
                     tum_ogretmenler_html += "</tr>"
                 tum_ogretmenler_html += f"""
                     </table>
-                    <div class="signature-container">
+                    <div style="margin-top:20px; display:flex; justify-content:space-between; padding:15px 40px; border-top:2px dashed #cbd5e1; background:white;">
                         <div style="text-align: center;"><b>Teslim Eden</b><br>Okul Müdürü</div>
                         <div style="text-align: center;"><b>Tebliğ Aldım</b><br>{o}</div>
                     </div>
@@ -903,7 +630,7 @@ elif st.session_state["sayfa"] == "Carsaf":
                     g_saat = g_saatler[g]
                     for sa in range(max_saat):
                         if sa < g_saat:
-                            val_raw = sonuclar["sinif"][s][g][sa].replace("<div class='lesson-box'>","").replace("</div>","").replace("<small>"," - ").replace("</small>","")
+                            val_raw = sonuclar["sinif"][s][g][sa].replace("<div style='background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:4px; color:#0369a1; font-weight:600;'>","").replace("</div>","").replace("<small style='display:block; color:#0284c7;'>"," - ").replace("</small>","")
                             satir[f"{sa+1}. Ders"] = val_raw if val_raw else "-"
                         else:
                             satir[f"{sa+1}. Ders"] = "-"
@@ -924,7 +651,7 @@ elif st.session_state["sayfa"] == "Carsaf":
                     g_saat = g_saatler[g]
                     for sa in range(max_saat):
                         if sa < g_saat:
-                            val_raw = sonuclar["ogretmen"][ogr][g][sa].replace("<div class='lesson-box'>","").replace("</div>","").replace("<small>"," - ").replace("</small>","")
+                            val_raw = sonuclar["ogretmen"][ogr][g][sa].replace("<div style='background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:4px; color:#0369a1; font-weight:600;'>","").replace("</div>","").replace("<small style='display:block; color:#0284c7;'>"," - ").replace("</small>","")
                             satir[f"{sa+1}. Ders"] = val_raw if val_raw else "-"
                         else:
                             satir[f"{sa+1}. Ders"] = "-"
@@ -974,19 +701,16 @@ elif st.session_state["sayfa"] == "Nöbet":
                             for r_idx in range(len(yerler)):
                                 y[(o, g_idx, r_idx, h)] = model_n.NewBoolVar(f"nob_{o}_{g_idx}_{r_idx}_{h}")
 
-                # 1. Her günün her yerine TAM 1 öğretmen
                 for h in range(hafta_sayisi):
                     for g_idx in range(len(gunler)):
                         for r_idx in range(len(yerler)):
                             model_n.Add(sum(y[(o, g_idx, r_idx, h)] for o in ogretmenler) == 1)
 
-                # 2. Aynı gün en fazla 1 nöbet
                 for o in ogretmenler:
                     for h in range(hafta_sayisi):
                         for g_idx in range(len(gunler)):
                             model_n.Add(sum(y[(o, g_idx, r_idx, h)] for r_idx in range(len(yerler))) <= 1)
 
-                # 3. Boş gün veya 0 ders saati olan günde nöbet yazılmaz
                 for o in ogretmenler:
                     bos_g = st.session_state["ogretmen_tercih"].get(o, {}).get("bos", "")
                     for g_idx, g in enumerate(gunler):
@@ -1028,7 +752,6 @@ elif st.session_state["sayfa"] == "Nöbet":
                 else:
                     st.error("Nöbet kısıtları nedeniyle çözüm üretilemedi.")
 
-        # Nöbet Tablosunu Göster
         if "aylik_nobetler" in st.session_state and st.session_state["aylik_nobetler"]:
             st.markdown(f"#### 📅 {secili_ay} Ayı - {hafta_secim} Nöbet Dağılımı")
             c_cols = st.columns(len(gunler))
@@ -1037,17 +760,17 @@ elif st.session_state["sayfa"] == "Nöbet":
             for idx, g in enumerate(gunler):
                 with c_cols[idx]:
                     st.markdown(f"""
-                    <div class="nobet-col-card">
-                        <div class="nobet-title">📅 {g}</div>
+                    <div style="background:white; border:1px solid #e2e8f0; border-top:4px solid #0ea5e9; border-radius:10px; padding:12px;">
+                        <b style="color:#1e293b;">📅 {g}</b><hr style="margin:8px 0;">
                     """, unsafe_allow_html=True)
                     
                     nobetciler = secili_hafta_verisi.get(g, [])
                     if nobetciler:
                         for n in nobetciler:
                             st.markdown(f"""
-                            <div class="nobet-teacher-pill">
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; margin-bottom:6px; font-size:12px; display:flex; justify-content:space-between;">
                                 <span><b>{n['ogretmen']}</b> <small>({n['ders_saati']} Sa)</small></span>
-                                <span class="location-tag">{n['yer']}</span>
+                                <span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:700;">{n['yer']}</span>
                             </div>
                             """, unsafe_allow_html=True)
                     else:
@@ -1061,7 +784,7 @@ elif st.session_state["sayfa"] == "Nöbet":
 # ==========================================
 elif st.session_state["sayfa"] == "HataBildir":
     st.subheader("💬 Okul Hata, Sorun & Talep Bildirim Merkezi")
-    st.markdown("Sistemle ilgili yaşadığınız tüm sorunları doğrudan Iğdır AR-GE birimine iletebilirsiniz.")
+    st.markdown("Sistemle ilgili yaşadığınız tüm durumları doğrudan Iğdır AR-GE birimine iletebilirsiniz.")
     
     with st.form("hata_formu"):
         okul_adi = st.text_input("Kurum İsmi", value=st.session_state["okul_adi"])
@@ -1086,11 +809,11 @@ elif st.session_state["sayfa"] == "HataBildir":
                 st.error("Lütfen Kurum İsmi ve Mesaj alanlarını doldurun.")
 
 # ==========================================
-# 7. GİZLİ AR-GE YÖNETİCİ PANELİ (ŞİFRELİ)
+# 7. GİZLİ AR-GE YÖNETİCİ PANELİ
 # ==========================================
 elif st.session_state["sayfa"] == "YoneticiPanel":
     st.subheader("🔒 Iğdır AR-GE Özel Yönetim Paneli")
-    st.caption("Bu bölüm yalnızca AR-GE birimi yetkilileri içindir. Okulların gönderdiği tüm hata ve talepler burada toplanır.")
+    st.caption("Bu bölüm yalnızca AR-GE birimi yetkilileri içindir.")
     
     sifre = st.text_input("Yönetici Giriş Şifresi", type="password", placeholder="Şifrenizi girin...")
     
