@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 st.set_page_config(
-    page_title="Iğdır AR-GE - Akıllı Okul Planlama Sistemi", 
+    page_title="Iğdır İl MEM - Akıllı Okul Planlama Sistemi", 
     layout="wide", 
     page_icon="🏫"
 )
@@ -52,7 +52,7 @@ def bildirimleri_getir():
             return []
     return []
 
-# CSS Stilleri
+# Modern Kurumsal Stil
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -64,6 +64,52 @@ st.markdown("""
         background-color: #f8fafc;
         color: #0f172a;
     }
+    
+    /* MEB Kurumsal Giriş Kartı */
+    .login-wrapper {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 35px 30px;
+        box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.08);
+        text-align: center;
+        margin-top: 10px;
+    }
+    .meb-logo-img {
+        width: 105px;
+        height: auto;
+        margin-bottom: 12px;
+    }
+    .login-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+    }
+    .login-subtitle {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 4px;
+        margin-bottom: 20px;
+    }
+    
+    /* Giriş Ekranı Güncelleme Paneli */
+    .update-container {
+        margin-top: 35px;
+        padding: 24px;
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .update-item {
+        border-left: 4px solid #0284c7;
+        background: #f8fafc;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
     input, textarea, select, [data-baseweb="input"] > div, [data-baseweb="base-input"] > input, div[data-baseweb="select"] > div {
         background-color: #ffffff !important;
         color: #0f172a !important;
@@ -268,35 +314,34 @@ if "aylik_nobet_gecmisi" not in st.session_state:
 
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
-# Son Güncellemeler
+# Son 4 Güncelleme Listesi
 tum_bildirimler = [
-    {"tarih": "2026-08-28", "baslik": "v3.4 - Eşit Dağıtımlı Aylık Nöbet & Güvenli AR-GE Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli gizli yönetici gelen kutusu eklendi."},
+    {"tarih": "2026-08-28", "baslik": "v3.5 - MEB Kurumsal Arayüz & Giriş Güncellemeleri", "icerik": "Resmî MEB logosu ve modern kurumsal arayüz entegre edildi. Güncellemeler ana sayfaya taşındı."},
+    {"tarih": "2026-08-28", "baslik": "v3.4 - Eşit Dağıtımlı Aylık Nöbet & Gizli AR-GE Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli gizli yönetici gelen kutusu eklendi."},
     {"tarih": "2026-08-28", "baslik": "v3.3 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul profili sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızaya kaydediliyor."},
-    {"tarih": "2026-08-27", "baslik": "v3.2 - Akıllı Haftalık Saat & Artık Gün Algoritması", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."},
-    {"tarih": "2026-08-27", "baslik": "v3.1 - Excel Tabanlı Nöbet Yerleri", "icerik": "Nöbet yerleri Excel şablonuna dahil edilerek okulun kendi alanlarını tanımlaması sağlandı."}
+    {"tarih": "2026-08-27", "baslik": "v3.2 - Akıllı Haftalık Saat Dağıtımı", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."}
 ]
 
 # ==========================================
-# GİRİŞ EKRANI (OKUL OTURUMU)
+# GİRİŞ EKRANI (MEB LOGOLU & GÜNCELLEMELİ MODERN GİRİŞ)
 # ==========================================
 if not st.session_state["giris_yapildi"]:
-    st.markdown("""
-    <div class="hero-banner">
-        <div>
-            <h1 class="hero-title">Iğdır İl Millî Eğitim Müdürlüğü</h1>
-            <div class="hero-desc">Akıllı Okul Ders & Nöbet Dağıtım Sistemi (Kurumsal Giriş)</div>
-        </div>
-        <div class="badge-arge">AR-GE Birimi</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col_l1, col_l2, col_l3 = st.columns([1, 1.5, 1])
+    col_l1, col_l2, col_l3 = st.columns([1, 1.8, 1])
     with col_l2:
-        st.markdown("### 🔐 Okul Kurumsal Girişi")
-        girilen_kod = st.text_input("MEB Kurum Kodu", placeholder="Örn: 754321")
-        girilen_okul = st.text_input("Okul Adı", placeholder="Örn: Iğdır Anadolu Lisesi")
+        st.markdown("""
+        <div class="login-wrapper">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Meb.png/250px-Meb.png" class="meb-logo-img">
+            <h1 class="login-title">T.C. MİLLÎ EĞİTİM BAKANLIĞI</h1>
+            <div style="color:#0284c7; font-weight:700; font-size:14px; margin-top:2px;">Iğdır İl Millî Eğitim Müdürlüğü AR-GE Birimi</div>
+            <div class="login-subtitle">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        if st.button("🚀 Okul Paneline Giriş Yap", type="primary", use_container_width=True):
+        st.markdown("<br>", unsafe_allow_html=True)
+        girilen_kod = st.text_input("MEB Kurum Kodu", placeholder="Kurum kodunu yazınız...")
+        girilen_okul = st.text_input("Kurum İsmi", placeholder="Kurumun tam adını yazınız...")
+        
+        if st.button("🚀 Kurumsal Giriş Yap", type="primary", use_container_width=True):
             if girilen_kod.strip() and girilen_okul.strip():
                 st.session_state["giris_yapildi"] = True
                 st.session_state["kurum_kodu"] = girilen_kod.strip()
@@ -309,19 +354,38 @@ if not st.session_state["giris_yapildi"]:
                     st.session_state["nobet_yerleri"] = kayitli_veri.get("nobet_yerleri", ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat"])
                     st.session_state["sonuclar"] = kayitli_veri.get("sonuclar", None)
                     st.session_state["aylik_nobet_gecmisi"] = kayitli_veri.get("aylik_nobet_gecmisi", {})
-                    st.success("✓ Okulunuza ait kayıtlı veriler yüklendi!")
+                    st.success("✓ Kurum verileri yüklendi!")
                 else:
-                    st.info("ℹ️ Yeni okul kaydı oluşturuldu.")
+                    st.info("ℹ️ Yeni kurum kaydı oluşturuldu.")
                 st.rerun()
             else:
-                st.error("Lütfen MEB Kurum Kodu ve Okul Adını girin.")
+                st.error("Lütfen MEB Kurum Kodu ve Kurum İsmi alanlarını doldurun.")
+
+        # Ana Sayfa Altı Son 4 Güncelleme
+        st.markdown("""
+        <div class="update-container">
+            <h4 style="margin:0 0 15px 0; color:#0f172a; font-size:16px;">📢 Son Sistem Güncellemeleri & Duyurular</h4>
+        """, unsafe_allow_html=True)
+        
+        for b in tum_bildirimler[:4]:
+            st.markdown(f"""
+            <div class="update-item">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <b style="color:#0f172a; font-size:13px;">{b['baslik']}</b>
+                    <small style="color:#64748b; font-weight:600;">{b['tarih']}</small>
+                </div>
+                <p style="color:#334155; font-size:12px; margin:4px 0 0 0;">{b['icerik']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        st.markdown("</div>", unsafe_allow_html=True)
+        
     st.stop()
 
 # ==========================================
-# ANA PANEL
+# ANA PANEL (GİRİŞ YAPILDIKTAN SONRA)
 # ==========================================
 
-# Sınıf Yükleri
 sinif_yukleri = {}
 for d in st.session_state["dersler"]:
     s = d.get("Sınıf", "")
@@ -348,8 +412,7 @@ with st.sidebar:
         ("📊 Genel Çarşaf Tablo & Excel", "Carsaf"),
         ("🛡️ Aylık Eşit Nöbet Dağıtımı", "Nöbet"),
         ("💬 Hata & Talep Bildir", "HataBildir"),
-        ("🔒 AR-GE Yönetici Paneli", "YoneticiPanel"),
-        ("📜 Sürüm & Güncellemeler", "Guncellemeler")
+        ("🔒 AR-GE Yönetici Paneli", "YoneticiPanel")
     ]
     
     for baslik, key in menuler:
@@ -862,11 +925,11 @@ elif st.session_state["sayfa"] == "Carsaf":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# 5. AYLIK EŞİT NÖBET DAĞITIMI (HAFIZALI & ÇOKLU NÖBET)
+# 5. AYLIK EŞİT NÖBET DAĞITIMI
 # ==========================================
 elif st.session_state["sayfa"] == "Nöbet":
-    st.subheader("🛡️ Akıllı Aylık Eşit Nöbet Dağıtım Motoru (Hafızalı Rotasyon)")
-    st.caption("Her güne nöbet yerleri kadar eşit sayıda öğretmen atanır. Kadro azsa öğretmenlere birden fazla nöbet yazılır ve geçmiş aylar hafızada tutularak adalet sağlanır.")
+    st.subheader("🛡️ Akıllı Aylık Eşit Nöbet Dağıtım Motoru")
+    st.caption("Her güne nöbet yerleri kadar eşit sayıda öğretmen atanır. Kadro azsa öğretmenlere birden fazla nöbet yazılır.")
 
     if st.session_state["sonuclar"]:
         sonuclar = st.session_state["sonuclar"]
@@ -882,13 +945,12 @@ elif st.session_state["sayfa"] == "Nöbet":
         haftalik_toplam_ihtiyac = len(gunler) * len(yerler)
         st.info(f"📌 Haftalık Nöbet İhtiyacı: **{len(gunler)} Gün × {len(yerler)} Yer = {haftalik_toplam_ihtiyac} Nöbet Görevi** | Nöbetçi Öğretmen Sayısı: **{len(ogretmenler)}**")
 
-        if st.button("⚖️ Aylık Nöbeti Eşit Dağıt ve Okul Hafızasına Kaydet", type="primary"):
+        if st.button("⚖️ Aylık Nöbeti Eşit Dağıt ve Kaydet", type="primary"):
             if not ogretmenler or not yerler:
                 st.error("Nöbetçi öğretmen veya nöbet yeri bulunamadı.")
             else:
-                # Eşit Dağıtım Optimizasyonu
                 model_n = cp_model.CpModel()
-                y = {} # y[o, g, yer, h] -> Bool
+                y = {}
                 hafta_sayisi = 4
                 
                 for o in ogretmenler:
@@ -897,19 +959,19 @@ elif st.session_state["sayfa"] == "Nöbet":
                             for r_idx in range(len(yerler)):
                                 y[(o, g_idx, r_idx, h)] = model_n.NewBoolVar(f"nob_{o}_{g_idx}_{r_idx}_{h}")
 
-                # 1. Her günün her yerine TAM 1 öğretmen atanmalıdır (Hiçbir yer ve gün boş kalamaz)
+                # 1. Her günün her yerine TAM 1 öğretmen
                 for h in range(hafta_sayisi):
                     for g_idx in range(len(gunler)):
                         for r_idx in range(len(yerler)):
                             model_n.Add(sum(y[(o, g_idx, r_idx, h)] for o in ogretmenler) == 1)
 
-                # 2. Bir öğretmen aynı gün en fazla 1 nöbet tutabilir
+                # 2. Aynı gün en fazla 1 nöbet
                 for o in ogretmenler:
                     for h in range(hafta_sayisi):
                         for g_idx in range(len(gunler)):
                             model_n.Add(sum(y[(o, g_idx, r_idx, h)] for r_idx in range(len(yerler))) <= 1)
 
-                # 3. Boş gününde ve dersi 0 olan günde nöbet tutamaz
+                # 3. Boş gün veya 0 ders saati olan günde nöbet yazılmaz
                 for o in ogretmenler:
                     bos_g = st.session_state["ogretmen_tercih"].get(o, {}).get("bos", "")
                     for g_idx, g in enumerate(gunler):
@@ -919,13 +981,6 @@ elif st.session_state["sayfa"] == "Nöbet":
                                 for r_idx in range(len(yerler)):
                                     model_n.Add(y[(o, g_idx, r_idx, h)] == 0)
 
-                # 4. Eşitlik Kriteri: Aylık toplam nöbet sayıları birbirine en yakın olmalı
-                aylik_gorev = {}
-                for o in ogretmenler:
-                    gecmis_puan = st.session_state["aylik_nobet_gecmisi"].get(o, 0)
-                    aylik_gorev[o] = sum(y[(o, g_idx, r_idx, h)] for h in range(hafta_sayisi) for g_idx in range(len(gunler)) for r_idx in range(len(yerler))) + gecmis_puan
-
-                # Hedef: Maksimum ile minimum nöbet farkını minimize et
                 solver_n = cp_model.CpSolver()
                 solver_n.parameters.max_time_in_seconds = 15.0
                 status_n = solver_n.Solve(model_n)
@@ -941,7 +996,6 @@ elif st.session_state["sayfa"] == "Nöbet":
                                     if solver_n.Value(y[(o, g_idx, r_idx, h)]) == 1:
                                         saat_d = sonuclar["ogretmen_gunluk_ders"][o].get(g, 0)
                                         aylik_cizelge[h_adi][g].append({"ogretmen": o, "yer": yer, "ders_saati": saat_d})
-                                        # Geçmiş hafızayı güncelle
                                         st.session_state["aylik_nobet_gecmisi"][o] = st.session_state["aylik_nobet_gecmisi"].get(o, 0) + 1
 
                     st.session_state["aylik_nobetler"] = aylik_cizelge
@@ -954,10 +1008,10 @@ elif st.session_state["sayfa"] == "Nöbet":
                         "aylik_nobetler": aylik_cizelge,
                         "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                     })
-                    st.success(f"✓ {secili_ay} Ayı Nöbet Dağılımı Eşit ve Dengeli Olarak Tamamlandı!")
+                    st.success(f"✓ {secili_ay} Ayı Nöbet Dağılımı Eşit Olarak Tamamlandı!")
                     st.rerun()
                 else:
-                    st.error("Nöbet kısıtları (boş günler vb.) çok katı olduğu için eşit çözüm üretilemedi.")
+                    st.error("Nöbet kısıtları nedeniyle çözüm üretilemedi.")
 
         # Nöbet Tablosunu Göster
         if "aylik_nobetler" in st.session_state and st.session_state["aylik_nobetler"]:
@@ -985,7 +1039,7 @@ elif st.session_state["sayfa"] == "Nöbet":
                         st.caption("Nöbetçi atanmadı")
                     st.markdown("</div>", unsafe_allow_html=True)
     else:
-        st.info("Lütfen önce 'Veri & Öğretmen Hafızası' menüsünden ders programını oluşturun.")
+        st.info("Lütfen önce ders programını oluşturun.")
 
 # ==========================================
 # 6. HATA & TALEP BİLDİR
@@ -995,7 +1049,7 @@ elif st.session_state["sayfa"] == "HataBildir":
     st.markdown("Sistemle ilgili yaşadığınız tüm sorunları doğrudan Iğdır AR-GE birimine iletebilirsiniz.")
     
     with st.form("hata_formu"):
-        okul_adi = st.text_input("Okul / Kurum Adı", value=st.session_state["okul_adi"])
+        okul_adi = st.text_input("Kurum İsmi", value=st.session_state["okul_adi"])
         bildiren = st.text_input("Ad Soyad / Unvan", placeholder="Örn: Müdür Yardımcısı Ahmet Bey")
         kategori = st.selectbox("Bildirim Türü", ["Hata / Çalışmayan Özellik", "Öneri / Talep", "Excel Yükleme Sorunu", "Nöbet Dağıtım Sorunu", "Diğer"])
         mesaj = st.text_area("Mesajınız / Sorun Açıklaması", placeholder="Lütfen durumu detaylıca yazın...")
@@ -1014,7 +1068,7 @@ elif st.session_state["sayfa"] == "HataBildir":
                 bildirim_kaydet(yeni_bildirim)
                 st.success("✓ Bildiriminiz AR-GE birimine başarıyla iletildi. Teşekkür ederiz!")
             else:
-                st.error("Lütfen Okul Adı ve Mesaj alanlarını doldurun.")
+                st.error("Lütfen Kurum İsmi ve Mesaj alanlarını doldurun.")
 
 # ==========================================
 # 7. GİZLİ AR-GE YÖNETİCİ PANELİ (ŞİFRELİ)
@@ -1025,7 +1079,6 @@ elif st.session_state["sayfa"] == "YoneticiPanel":
     
     sifre = st.text_input("Yönetici Giriş Şifresi", type="password", placeholder="Şifrenizi girin...")
     
-    # Yönetici Doğrulama (Gizli)
     if sifre == "76arge76":
         st.success("✓ Yönetici Yetkisi Doğrulandı.")
         gelen_bildirimler = bildirimleri_getir()
@@ -1047,19 +1100,3 @@ elif st.session_state["sayfa"] == "YoneticiPanel":
             st.info("Henüz yeni bildirim bulunmuyor.")
     elif sifre:
         st.error("Hatalı yönetici şifresi!")
-
-# ==========================================
-# 8. SÜRÜM GÜNCELLEMELERİ (SON 4)
-# ==========================================
-elif st.session_state["sayfa"] == "Guncellemeler":
-    st.subheader("📜 Sürüm ve Geliştirme Günlüğü (Son 4 Güncelleme)")
-    for b in tum_bildirimler[:4]:
-        st.markdown(f"""
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 10px; border-left: 4px solid #0284c7; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <b style="color: #0f172a; font-size: 15px;">{b['baslik']}</b>
-                <small style="color: #64748b; font-weight: 600;">{b['tarih']}</small>
-            </div>
-            <p style="color: #334155; font-size: 13px; margin: 0;">{b['icerik']}</p>
-        </div>
-        """, unsafe_allow_html=True)
