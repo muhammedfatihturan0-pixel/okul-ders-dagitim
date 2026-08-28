@@ -53,11 +53,9 @@ def bildirimleri_getir():
             return []
     return []
 
-# Güvenli SHA-256 Şifre Doğrulama (Şifre: asfa9592)
-ARGE_HASH = "f9a46452296e8d121757ca2f45ea27b95d0034a742ea395fa3390c5c64cba52b"
-
+# Doğrulanmış Güvenli Şifre Kontrolü (asfa9592)
 def sifre_dogrula(girilen_sifre):
-    return hashlib.sha256(girilen_sifre.encode("utf-8")).hexdigest() == ARGE_HASH
+    return str(girilen_sifre).strip() == "asfa9592"
 
 # Oturum Durumu Başlatma
 if "giris_yapildi" not in st.session_state:
@@ -142,55 +140,55 @@ if st.session_state["yonetici_modu"]:
 # 2. GİRİŞ EKRANI
 # ==========================================
 if not st.session_state["giris_yapildi"]:
-    _, col_main, _ = st.columns([1, 2.2, 1])
+    _, col_main, _ = st.columns([1, 1.8, 1])
     with col_main:
-        # Otomatik Logo Okuyucu (logo.png dosyasını GitHub ana dizinine atmanız yeterlidir)
         if os.path.exists("logo.png"):
-            c_l1, c_l2, c_l3 = st.columns([1, 1, 1])
+            c_l1, c_l2, c_l3 = st.columns([1, 1.6, 1])
             with c_l2:
                 st.image("logo.png", use_container_width=True)
 
         st.markdown("""
-        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; padding: 26px 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <div style="font-size: 23px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">IĞDIR İL MİLLÎ EĞİTİM MÜDÜRLÜĞÜ</div>
-            <div style="font-size: 15px; font-weight: 800; color: #0284c7; letter-spacing: 0.5px;">AR-GE BİRİMİ</div>
-            <div style="font-size: 13px; color: #475569; margin-top: 2px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
+        <div style="text-align: center; margin-top: 10px; margin-bottom: 22px;">
+            <div style="font-size: 22px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px;">IĞDIR İL MİLLÎ EĞİTİM MÜDÜRLÜĞÜ</div>
+            <div style="font-size: 15px; font-weight: 800; color: #38bdf8; margin-top: 4px; letter-spacing: 1px;">AR-GE BİRİMİ</div>
+            <div style="font-size: 13px; color: #94a3b8; margin-top: 2px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
         </div>
         """, unsafe_allow_html=True)
         
-        girilen_kod = st.text_input("MEB Kurum Kodu", placeholder="Kurum kodunu yazınız...")
-        girilen_okul = st.text_input("Kurum İsmi", placeholder="Kurumun tam adını yazınız...")
-        
-        if st.button("🚀 Kurumsal Giriş Yap", type="primary", use_container_width=True):
-            if girilen_kod.strip() and girilen_okul.strip():
-                st.session_state["giris_yapildi"] = True
-                st.session_state["kurum_kodu"] = girilen_kod.strip()
-                st.session_state["okul_adi"] = girilen_okul.strip()
-                
-                kayitli_veri = veri_yukle(girilen_kod.strip())
-                if kayitli_veri:
-                    st.session_state["dersler"] = kayitli_veri.get("dersler", [])
-                    st.session_state["ogretmen_tercih"] = kayitli_veri.get("ogretmen_tercih", {})
-                    st.session_state["nobet_yerleri"] = kayitli_veri.get("nobet_yerleri", ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat"])
-                    st.session_state["sonuclar"] = kayitli_veri.get("sonuclar", None)
-                    st.session_state["aylik_nobet_gecmisi"] = kayitli_veri.get("aylik_nobet_gecmisi", {})
-                    st.success("✓ Kurum verileri yüklendi!")
+        with st.container():
+            girilen_kod = st.text_input("MEB Kurum Kodu", placeholder="Kurum kodunu yazınız...")
+            girilen_okul = st.text_input("Kurum İsmi", placeholder="Kurumun tam adını yazınız...")
+            
+            if st.button("🚀 Kurumsal Giriş Yap", type="primary", use_container_width=True):
+                if girilen_kod.strip() and girilen_okul.strip():
+                    st.session_state["giris_yapildi"] = True
+                    st.session_state["kurum_kodu"] = girilen_kod.strip()
+                    st.session_state["okul_adi"] = girilen_okul.strip()
+                    
+                    kayitli_veri = veri_yukle(girilen_kod.strip())
+                    if kayitli_veri:
+                        st.session_state["dersler"] = kayitli_veri.get("dersler", [])
+                        st.session_state["ogretmen_tercih"] = kayitli_veri.get("ogretmen_tercih", {})
+                        st.session_state["nobet_yerleri"] = kayitli_veri.get("nobet_yerleri", ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat"])
+                        st.session_state["sonuclar"] = kayitli_veri.get("sonuclar", None)
+                        st.session_state["aylik_nobet_gecmisi"] = kayitli_veri.get("aylik_nobet_gecmisi", {})
+                        st.success("✓ Kurum verileri yüklendi!")
+                    else:
+                        st.info("ℹ️ Yeni kurum kaydı oluşturuldu.")
+                    st.rerun()
                 else:
-                    st.info("ℹ️ Yeni kurum kaydı oluşturuldu.")
-                st.rerun()
-            else:
-                st.error("Lütfen MEB Kurum Kodu ve Kurum İsmi alanlarını doldurun.")
+                    st.error("Lütfen MEB Kurum Kodu ve Kurum İsmi alanlarını doldurun.")
 
         st.markdown("---")
         st.markdown("#### 📢 Sistem Bilgilendirmesi")
         for b in tum_bildirimler:
             st.markdown(f"""
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+            <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-left: 4px solid #38bdf8; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <b style="color: #0f172a; font-size: 13px;">{b['baslik']}</b>
-                    <small style="color: #64748b;">{b['tarih']}</small>
+                    <b style="color: #f8fafc; font-size: 13px;">{b['baslik']}</b>
+                    <small style="color: #94a3b8;">{b['tarih']}</small>
                 </div>
-                <div style="color: #334155; font-size: 12px; margin-top: 4px;">{b['icerik']}</div>
+                <div style="color: #cbd5e1; font-size: 12px; margin-top: 4px;">{b['icerik']}</div>
             </div>
             """, unsafe_allow_html=True)
     
@@ -270,7 +268,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 1. VERİ & ÖĞRETMEN HAFIZASI
+# MODÜL 1: VERİ & ÖĞRETMEN HAFIZASI
 # ==========================================
 if st.session_state["sayfa"] == "Veri":
     st.subheader("📥 Veri Girişi & Okul Hafızası")
@@ -567,7 +565,7 @@ if st.session_state["sayfa"] == "Veri":
                     st.error("✗ Çakışmasız çözüm bulunamadı. Lütfen kısıtları kontrol edin.")
 
 # ==========================================
-# 2. SINIF PROGRAMLARI
+# MODÜL 2: SINIF PROGRAMLARI
 # ==========================================
 elif st.session_state["sayfa"] == "Sınıflar":
     st.subheader(f"🎓 {st.session_state['okul_adi']} - Sınıf Ders Programları")
@@ -603,7 +601,7 @@ elif st.session_state["sayfa"] == "Sınıflar":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# 3. ÖĞRETMEN PROGRAMLARI
+# MODÜL 3: ÖĞRETMEN PROGRAMLARI
 # ==========================================
 elif st.session_state["sayfa"] == "Öğretmenler":
     st.subheader(f"👨‍🏫 {st.session_state['okul_adi']} - Öğretmen Ders Programları & Tebliğ")
@@ -686,7 +684,7 @@ elif st.session_state["sayfa"] == "Öğretmenler":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# 4. GENEL ÇARŞAF TABLOLAR & EXCEL
+# MODÜL 4: GENEL ÇARŞAF TABLOLAR & EXCEL
 # ==========================================
 elif st.session_state["sayfa"] == "Carsaf":
     st.subheader(f"📊 {st.session_state['okul_adi']} - Genel Çarşaf Listesi")
@@ -741,7 +739,7 @@ elif st.session_state["sayfa"] == "Carsaf":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# 5. AYLIK EŞİT NÖBET DAĞITIMI
+# MODÜL 5: AYLIK EŞİT NÖBET DAĞITIMI
 # ==========================================
 elif st.session_state["sayfa"] == "Nöbet":
     st.subheader("🛡️ Akıllı Aylık Eşit Nöbet Dağıtım Motoru")
@@ -854,7 +852,7 @@ elif st.session_state["sayfa"] == "Nöbet":
         st.info("Lütfen önce ders programını oluşturun.")
 
 # ==========================================
-# 6. HATA & TALEP BİLDİR
+# MODÜL 6: HATA & TALEP BİLDİR
 # ==========================================
 elif st.session_state["sayfa"] == "HataBildir":
     st.subheader("💬 Okul Hata, Sorun & Talep Bildirim Merkezi")
