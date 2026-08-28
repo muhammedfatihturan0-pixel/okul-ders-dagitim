@@ -83,24 +83,25 @@ if "aylik_nobet_gecmisi" not in st.session_state:
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
 tum_bildirimler = [
-    {"tarih": "2026-08-28", "baslik": "v3.6 - Temiz Kurumsal Arayüz", "icerik": "Giriş ekranı ve logo render hataları giderildi, kurumsal yapı stabilize edildi."},
-    {"tarih": "2026-08-28", "baslik": "v3.5 - Eşit Dağıtımlı Aylık Nöbet & Gizli AR-GE Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli AR-GE gelen kutusu eklendi."},
-    {"tarih": "2026-08-28", "baslik": "v3.4 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul profili sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızaya kaydediliyor."},
-    {"tarih": "2026-08-27", "baslik": "v3.3 - Akıllı Haftalık Saat Dağıtımı", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."}
+    {"tarih": "2026-08-28", "baslik": "v3.8 - Sade Kurumsal Arayüz", "icerik": "Giriş ekranı tamamen sadeleştirildi, tüm görsel bağımlılıkları kaldırıldı."},
+    {"tarih": "2026-08-28", "baslik": "v3.7 - Eşit Dağıtımlı Aylık Nöbet & Gizli AR-GE Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli AR-GE gelen kutusu eklendi."},
+    {"tarih": "2026-08-28", "baslik": "v3.6 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul profili sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızaya kaydediliyor."},
+    {"tarih": "2026-08-27", "baslik": "v3.5 - Akıllı Haftalık Saat Dağıtımı", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."}
 ]
 
 # ==========================================
-# GİRİŞ EKRANI
+# GİRİŞ EKRANI (LOGOSUZ, SADE VE TEMİZ)
 # ==========================================
 if not st.session_state["giris_yapildi"]:
     _, col_main, _ = st.columns([1, 2, 1])
     with col_main:
-        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Meb.png/180px-Meb.png", width=100)
-        st.title("Iğdır İl Millî Eğitim Müdürlüğü")
-        st.subheader("AR-GE BİRİMİ")
-        st.caption("Akıllı Okul Ders & Nöbet Dağıtım Sistemi")
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="text-align: center; margin-top: 15px; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #0f172a; font-weight: 800; font-size: 24px;">Iğdır İl Millî Eğitim Müdürlüğü</h2>
+            <div style="color: #0284c7; font-weight: 800; font-size: 15px; margin-top: 4px; letter-spacing: 0.5px;">AR-GE BİRİMİ</div>
+            <div style="color: #64748b; font-size: 13px; margin-top: 2px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         st.markdown("---")
         girilen_kod = st.text_input("MEB Kurum Kodu", placeholder="Kurum kodunu yazınız...")
@@ -136,7 +137,7 @@ if not st.session_state["giris_yapildi"]:
     st.stop()
 
 # ==========================================
-# ANA PANEL
+# ANA PANEL (GİRİŞ YAPILDIKTAN SONRA)
 # ==========================================
 
 sinif_yukleri = {}
