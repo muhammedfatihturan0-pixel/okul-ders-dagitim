@@ -4,6 +4,7 @@ from ortools.sat.python import cp_model
 import io
 import os
 import json
+import hashlib
 from datetime import datetime
 
 st.set_page_config(
@@ -52,9 +53,19 @@ def bildirimleri_getir():
             return []
     return []
 
+# Güvenli SHA-256 Şifre Doğrulama (Şifre: asfa9592)
+# F12 Öğeyi Denetle veya GitHub kaynak kodundan şifre çözülemez.
+ARGE_HASH = "f9a46452296e8d121757ca2f45ea27b95d0034a742ea395fa3390c5c64cba52b"
+
+def sifre_dogrula(girilen_sifre):
+    return hashlib.sha256(girilen_sifre.encode("utf-8")).hexdigest() == ARGE_HASH
+
 # Oturum Durumu Başlatma
 if "giris_yapildi" not in st.session_state:
     st.session_state["giris_yapildi"] = False
+
+if "yonetici_modu" not in st.session_state:
+    st.session_state["yonetici_modu"] = False
 
 if "kurum_kodu" not in st.session_state:
     st.session_state["kurum_kodu"] = ""
@@ -82,23 +93,63 @@ if "aylik_nobet_gecmisi" not in st.session_state:
 
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
-# Sade ve Profesyonel Sürüm Geçmişi
 tum_bildirimler = [
     {"tarih": "2026-08-28", "baslik": "v1.1 - Hafıza & Nöbet Rotasyon İyileştirmesi", "icerik": "Kurumsal oturum hafızası, aylık eşit nöbet dağıtımı ve performans optimizasyonları yapıldı."},
     {"tarih": "2026-08-27", "baslik": "v1.0 - Resmî Kararlı Sürüm", "icerik": "Iğdır AR-GE akıllı okul ders programı ve nöbet dağıtım sistemi kullanıma açıldı."}
 ]
 
 # ==========================================
-# GİRİŞ EKRANI (NET, OKUNUR VE BÜYÜK TİPOGRAFİ)
+# 1. AR-GE YÖNETİCİ ÖZEL EKRANI
+# ==========================================
+if st.session_state["yonetici_modu"]:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 12px; padding: 18px 24px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h3 style="margin: 0; color: #38bdf8;">Iğdır İl MEM AR-GE Yönetim Merkezi</h3>
+            <span style="font-size: 13px; color: #94a3b8;">Okullardan Gelen Tüm Talep, Hata ve Geri Bildirimler</span>
+        </div>
+        <div style="background: #38bdf8; color: #0f172a; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 12px;">Yetkili Panel</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("🚪 Yönetici Panelinden Çık ve Giriş Ekranına Dön", use_container_width=True):
+        st.session_state["yonetici_modu"] = False
+        st.rerun()
+
+    gelen_bildirimler = bildirimleri_getir()
+    st.markdown(f"#### 📬 Gelen Bildirim Listesi ({len(gelen_bildirimler)} Kayıt)")
+    
+    if gelen_bildirimler:
+        for b in gelen_bildirimler:
+            st.markdown(f"""
+            <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #0284c7; padding:16px; border-radius:8px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <b style="font-size:16px; color:#0f172a;">🏫 {b['okul']} (Kurum Kodu: {b.get('kurum_kodu','-')})</b>
+                    <small style="color:#64748b; font-weight:600;">{b['tarih']}</small>
+                </div>
+                <div style="margin-bottom:6px;">
+                    <b>Bildiren Yetkili:</b> {b['kisi']} | <b>Kategori:</b> <span style="color:#0284c7; font-weight:700;">{b['kategori']}</span>
+                </div>
+                <div style="background:#f8fafc; padding:10px; border-radius:6px; color:#334155; font-size:14px; border:1px solid #e2e8f0;">
+                    {b['mesaj']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("Okullardan iletilen yeni bir hata veya talep bulunmuyor.")
+    st.stop()
+
+# ==========================================
+# 2. GİRİŞ EKRANI (SAĞ ALTA ŞİFRELİ AR-GE GİRİŞİ)
 # ==========================================
 if not st.session_state["giris_yapildi"]:
     _, col_main, _ = st.columns([1, 2, 1])
     with col_main:
         st.markdown("""
         <div style="text-align: center; margin-top: 25px; margin-bottom: 25px;">
-            <div style="font-size: 26px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px;">Iğdır İl Millî Eğitim Müdürlüğü</div>
-            <div style="font-size: 16px; font-weight: 800; color: #38bdf8; margin-top: 6px; letter-spacing: 1px;">AR-GE BİRİMİ</div>
-            <div style="font-size: 14px; color: #94a3b8; margin-top: 4px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
+            <div style="font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">Iğdır İl Millî Eğitim Müdürlüğü</div>
+            <div style="font-size: 16px; font-weight: 800; color: #0284c7; margin-top: 6px; letter-spacing: 1px;">AR-GE BİRİMİ</div>
+            <div style="font-size: 14px; color: #64748b; margin-top: 4px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -132,11 +183,25 @@ if not st.session_state["giris_yapildi"]:
             with st.container():
                 st.markdown(f"**{b['baslik']}** — *{b['tarih']}*")
                 st.caption(b['icerik'])
+    
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    # En Sağ Alt Köşede Şifreli AR-GE Giriş Paneli
+    _, _, col_admin_corner = st.columns([1.5, 1.5, 1.2])
+    with col_admin_corner:
+        with st.expander("🔒 AR-GE Girişi", expanded=False):
+            yonetici_sifresi = st.text_input("Şifre", type="password", placeholder="Yetkili şifresi...", key="arge_corner_pwd", label_visibility="collapsed")
+            if st.button("Giriş Yap", use_container_width=True, key="btn_corner_login"):
+                if sifre_dogrula(yonetici_sifresi):
+                    st.session_state["yonetici_modu"] = True
+                    st.rerun()
+                else:
+                    st.error("Hatalı şifre!")
         
     st.stop()
 
 # ==========================================
-# ANA PANEL (GİRİŞ YAPILDIKTAN SONRA)
+# 3. ANA PANEL (OKUL OTURUMU)
 # ==========================================
 
 sinif_yukleri = {}
@@ -163,8 +228,7 @@ with st.sidebar:
         ("👨‍🏫 Öğretmen Programları (A4)", "Öğretmenler"),
         ("📊 Genel Çarşaf Tablo & Excel", "Carsaf"),
         ("🛡️ Aylık Eşit Nöbet Dağıtımı", "Nöbet"),
-        ("💬 Hata & Talep Bildir", "HataBildir"),
-        ("🔒 AR-GE Yönetici Paneli", "YoneticiPanel")
+        ("💬 Hata & Talep Bildir", "HataBildir")
     ]
     
     for baslik, key in menuler:
@@ -807,34 +871,3 @@ elif st.session_state["sayfa"] == "HataBildir":
                 st.success("✓ Bildiriminiz AR-GE birimine başarıyla iletildi. Teşekkür ederiz!")
             else:
                 st.error("Lütfen Kurum İsmi ve Mesaj alanlarını doldurun.")
-
-# ==========================================
-# 7. GİZLİ AR-GE YÖNETİCİ PANELİ
-# ==========================================
-elif st.session_state["sayfa"] == "YoneticiPanel":
-    st.subheader("🔒 Iğdır AR-GE Özel Yönetim Paneli")
-    st.caption("Bu bölüm yalnızca AR-GE birimi yetkilileri içindir.")
-    
-    sifre = st.text_input("Yönetici Giriş Şifresi", type="password", placeholder="Şifrenizi girin...")
-    
-    if sifre == "76arge76":
-        st.success("✓ Yönetici Yetkisi Doğrulandı.")
-        gelen_bildirimler = bildirimleri_getir()
-        
-        if gelen_bildirimler:
-            st.markdown(f"#### 📬 Gelen Okul Bildirimleri ({len(gelen_bildirimler)} Bildirim)")
-            for b in gelen_bildirimler:
-                st.markdown(f"""
-                <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #0284c7; padding:14px; border-radius:8px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <b>🏫 {b['okul']} (Kod: {b.get('kurum_kodu','-')})</b>
-                        <small style="color:#64748b;">{b['tarih']}</small>
-                    </div>
-                    <b>Yetkili:</b> {b['kisi']} | <b>Tür:</b> <span style="color:#0284c7; font-weight:700;">{b['kategori']}</span><br>
-                    <p style="margin-top:6px; margin-bottom:0; color:#334155;">{b['mesaj']}</p>
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.info("Henüz yeni bildirim bulunmuyor.")
-    elif sifre:
-        st.error("Hatalı yönetici şifresi!")
