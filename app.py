@@ -54,7 +54,6 @@ def bildirimleri_getir():
     return []
 
 # Güvenli SHA-256 Şifre Doğrulama (Şifre: asfa9592)
-# F12 Öğeyi Denetle veya GitHub kaynak kodundan şifre çözülemez.
 ARGE_HASH = "f9a46452296e8d121757ca2f45ea27b95d0034a742ea395fa3390c5c64cba52b"
 
 def sifre_dogrula(girilen_sifre):
@@ -140,20 +139,25 @@ if st.session_state["yonetici_modu"]:
     st.stop()
 
 # ==========================================
-# 2. GİRİŞ EKRANI (SAĞ ALTA ŞİFRELİ AR-GE GİRİŞİ)
+# 2. GİRİŞ EKRANI
 # ==========================================
 if not st.session_state["giris_yapildi"]:
-    _, col_main, _ = st.columns([1, 2, 1])
+    _, col_main, _ = st.columns([1, 2.2, 1])
     with col_main:
+        # Otomatik Logo Okuyucu (logo.png dosyasını GitHub ana dizinine atmanız yeterlidir)
+        if os.path.exists("logo.png"):
+            c_l1, c_l2, c_l3 = st.columns([1, 1, 1])
+            with c_l2:
+                st.image("logo.png", use_container_width=True)
+
         st.markdown("""
-        <div style="text-align: center; margin-top: 25px; margin-bottom: 25px;">
-            <div style="font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">Iğdır İl Millî Eğitim Müdürlüğü</div>
-            <div style="font-size: 16px; font-weight: 800; color: #0284c7; margin-top: 6px; letter-spacing: 1px;">AR-GE BİRİMİ</div>
-            <div style="font-size: 14px; color: #64748b; margin-top: 4px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; padding: 26px 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="font-size: 23px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">IĞDIR İL MİLLÎ EĞİTİM MÜDÜRLÜĞÜ</div>
+            <div style="font-size: 15px; font-weight: 800; color: #0284c7; letter-spacing: 0.5px;">AR-GE BİRİMİ</div>
+            <div style="font-size: 13px; color: #475569; margin-top: 2px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("---")
         girilen_kod = st.text_input("MEB Kurum Kodu", placeholder="Kurum kodunu yazınız...")
         girilen_okul = st.text_input("Kurum İsmi", placeholder="Kurumun tam adını yazınız...")
         
@@ -180,13 +184,19 @@ if not st.session_state["giris_yapildi"]:
         st.markdown("---")
         st.markdown("#### 📢 Sistem Bilgilendirmesi")
         for b in tum_bildirimler:
-            with st.container():
-                st.markdown(f"**{b['baslik']}** — *{b['tarih']}*")
-                st.caption(b['icerik'])
+            st.markdown(f"""
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <b style="color: #0f172a; font-size: 13px;">{b['baslik']}</b>
+                    <small style="color: #64748b;">{b['tarih']}</small>
+                </div>
+                <div style="color: #334155; font-size: 12px; margin-top: 4px;">{b['icerik']}</div>
+            </div>
+            """, unsafe_allow_html=True)
     
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    # En Sağ Alt Köşede Şifreli AR-GE Giriş Paneli
+    # Sağ Alt Köşe Şifreli Yönetici Girişi
     _, _, col_admin_corner = st.columns([1.5, 1.5, 1.2])
     with col_admin_corner:
         with st.expander("🔒 AR-GE Girişi", expanded=False):
