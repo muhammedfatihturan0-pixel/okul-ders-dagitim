@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 st.set_page_config(
-    page_title="Iğdır İl MEM - Akıllı Okul Planlama Sistemi", 
+    page_title="Iğdır MEM AR-GE - Akıllı Okul Planlama Sistemi", 
     layout="wide", 
     page_icon="🏫"
 )
@@ -65,7 +65,6 @@ st.markdown("""
         color: #0f172a;
     }
     
-    /* MEB Kurumsal Giriş Kartı */
     .login-wrapper {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -75,28 +74,33 @@ st.markdown("""
         text-align: center;
         margin-top: 10px;
     }
-    .meb-logo-img {
-        width: 105px;
-        height: auto;
+    .meb-logo-svg {
+        width: 90px;
+        height: 90px;
         margin-bottom: 12px;
     }
     .login-title {
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 800;
         color: #0f172a;
         margin: 0;
     }
     .login-subtitle {
+        font-size: 14px;
+        color: #0284c7;
+        font-weight: 700;
+        margin-top: 6px;
+    }
+    .login-desc {
         font-size: 13px;
         color: #64748b;
-        margin-top: 4px;
+        margin-top: 2px;
         margin-bottom: 20px;
     }
     
-    /* Giriş Ekranı Güncelleme Paneli */
     .update-container {
-        margin-top: 35px;
-        padding: 24px;
+        margin-top: 30px;
+        padding: 22px;
         background: #ffffff;
         border-radius: 16px;
         border: 1px solid #e2e8f0;
@@ -284,7 +288,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Oturum Durumu Başlatma
+# Oturum Durumu
 if "giris_yapildi" not in st.session_state:
     st.session_state["giris_yapildi"] = False
 
@@ -314,26 +318,37 @@ if "aylik_nobet_gecmisi" not in st.session_state:
 
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
-# Son 4 Güncelleme Listesi
 tum_bildirimler = [
-    {"tarih": "2026-08-28", "baslik": "v3.5 - MEB Kurumsal Arayüz & Giriş Güncellemeleri", "icerik": "Resmî MEB logosu ve modern kurumsal arayüz entegre edildi. Güncellemeler ana sayfaya taşındı."},
-    {"tarih": "2026-08-28", "baslik": "v3.4 - Eşit Dağıtımlı Aylık Nöbet & Gizli AR-GE Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli gizli yönetici gelen kutusu eklendi."},
-    {"tarih": "2026-08-28", "baslik": "v3.3 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul profili sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızaya kaydediliyor."},
-    {"tarih": "2026-08-27", "baslik": "v3.2 - Akıllı Haftalık Saat Dağıtımı", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."}
+    {"tarih": "2026-08-28", "baslik": "v3.6 - Iğdır AR-GE Kurumsal Kimlik & Gömülü Logo", "icerik": "Giriş ekranı Iğdır İl MEM AR-GE kurumsal kimliğine uyarlandı, resmî vektörel logo gömüldü."},
+    {"tarih": "2026-08-28", "baslik": "v3.5 - Eşit Dağıtımlı Aylık Nöbet & Gizli Yönetici Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli AR-GE gelen kutusu eklendi."},
+    {"tarih": "2026-08-28", "baslik": "v3.4 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul profili sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızaya kaydediliyor."},
+    {"tarih": "2026-08-27", "baslik": "v3.3 - Akıllı Haftalık Saat Dağıtımı", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."}
 ]
 
+# MEB Resmî Vektörel Logosu (SVG)
+MEB_SVG_LOGO = """
+<svg class="meb-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="46" fill="#e11d48"/>
+    <circle cx="50" cy="50" r="41" stroke="#ffffff" stroke-width="2"/>
+    <path d="M50 24L52 30H58L53 34L55 40L50 36L45 40L47 34L42 30H48L50 24Z" fill="#ffffff"/>
+    <path d="M50 42C43 42 34 46 28 52C28 66 38 72 50 78C62 72 72 66 72 52C66 46 57 42 50 42Z" fill="#ffffff"/>
+    <path d="M50 46C56 46 64 49 68 54C67 64 59 69 50 74C41 69 33 64 32 54C36 49 44 46 50 46Z" fill="#e11d48"/>
+    <path d="M50 50V68M42 54C45 56 48 57 50 57C52 57 55 56 58 54M43 60C46 62 48 63 50 63C52 63 54 62 57 60" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
+"""
+
 # ==========================================
-# GİRİŞ EKRANI (MEB LOGOLU & GÜNCELLEMELİ MODERN GİRİŞ)
+# GİRİŞ EKRANI
 # ==========================================
 if not st.session_state["giris_yapildi"]:
     col_l1, col_l2, col_l3 = st.columns([1, 1.8, 1])
     with col_l2:
-        st.markdown("""
+        st.markdown(f"""
         <div class="login-wrapper">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Meb.png/250px-Meb.png" class="meb-logo-img">
-            <h1 class="login-title">T.C. MİLLÎ EĞİTİM BAKANLIĞI</h1>
-            <div style="color:#0284c7; font-weight:700; font-size:14px; margin-top:2px;">Iğdır İl Millî Eğitim Müdürlüğü AR-GE Birimi</div>
-            <div class="login-subtitle">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
+            {MEB_SVG_LOGO}
+            <h1 class="login-title">Iğdır İl Millî Eğitim Müdürlüğü</h1>
+            <div class="login-subtitle">AR-GE BİRİMİ</div>
+            <div class="login-desc">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -383,7 +398,7 @@ if not st.session_state["giris_yapildi"]:
     st.stop()
 
 # ==========================================
-# ANA PANEL (GİRİŞ YAPILDIKTAN SONRA)
+# ANA PANEL
 # ==========================================
 
 sinif_yukleri = {}
