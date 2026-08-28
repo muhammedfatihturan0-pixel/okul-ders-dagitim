@@ -82,24 +82,23 @@ if "aylik_nobet_gecmisi" not in st.session_state:
 
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
+# Sade ve Profesyonel Sürüm Geçmişi
 tum_bildirimler = [
-    {"tarih": "2026-08-28", "baslik": "v3.8 - Sade Kurumsal Arayüz", "icerik": "Giriş ekranı tamamen sadeleştirildi, tüm görsel bağımlılıkları kaldırıldı."},
-    {"tarih": "2026-08-28", "baslik": "v3.7 - Eşit Dağıtımlı Aylık Nöbet & Gizli AR-GE Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli AR-GE gelen kutusu eklendi."},
-    {"tarih": "2026-08-28", "baslik": "v3.6 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul profili sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızaya kaydediliyor."},
-    {"tarih": "2026-08-27", "baslik": "v3.5 - Akıllı Haftalık Saat Dağıtımı", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."}
+    {"tarih": "2026-08-28", "baslik": "v1.1 - Hafıza & Nöbet Rotasyon İyileştirmesi", "icerik": "Kurumsal oturum hafızası, aylık eşit nöbet dağıtımı ve performans optimizasyonları yapıldı."},
+    {"tarih": "2026-08-27", "baslik": "v1.0 - Resmî Kararlı Sürüm", "icerik": "Iğdır AR-GE akıllı okul ders programı ve nöbet dağıtım sistemi kullanıma açıldı."}
 ]
 
 # ==========================================
-# GİRİŞ EKRANI (LOGOSUZ, SADE VE TEMİZ)
+# GİRİŞ EKRANI (NET, OKUNUR VE BÜYÜK TİPOGRAFİ)
 # ==========================================
 if not st.session_state["giris_yapildi"]:
     _, col_main, _ = st.columns([1, 2, 1])
     with col_main:
         st.markdown("""
-        <div style="text-align: center; margin-top: 15px; margin-bottom: 20px;">
-            <h2 style="margin: 0; color: #0f172a; font-weight: 800; font-size: 24px;">Iğdır İl Millî Eğitim Müdürlüğü</h2>
-            <div style="color: #0284c7; font-weight: 800; font-size: 15px; margin-top: 4px; letter-spacing: 0.5px;">AR-GE BİRİMİ</div>
-            <div style="color: #64748b; font-size: 13px; margin-top: 2px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
+        <div style="text-align: center; margin-top: 25px; margin-bottom: 25px;">
+            <div style="font-size: 26px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px;">Iğdır İl Millî Eğitim Müdürlüğü</div>
+            <div style="font-size: 16px; font-weight: 800; color: #38bdf8; margin-top: 6px; letter-spacing: 1px;">AR-GE BİRİMİ</div>
+            <div style="font-size: 14px; color: #94a3b8; margin-top: 4px;">Akıllı Okul Ders & Nöbet Dağıtım Sistemi</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -128,8 +127,8 @@ if not st.session_state["giris_yapildi"]:
                 st.error("Lütfen MEB Kurum Kodu ve Kurum İsmi alanlarını doldurun.")
 
         st.markdown("---")
-        st.markdown("#### 📢 Son Sistem Güncellemeleri & Duyurular")
-        for b in tum_bildirimler[:4]:
+        st.markdown("#### 📢 Sistem Bilgilendirmesi")
+        for b in tum_bildirimler:
             with st.container():
                 st.markdown(f"**{b['baslik']}** — *{b['tarih']}*")
                 st.caption(b['icerik'])
