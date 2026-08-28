@@ -53,7 +53,7 @@ def bildirimleri_getir():
             return []
     return []
 
-# Doğrulanmış Güvenli Şifre Kontrolü (asfa9592)
+# Güvenli Şifre Kontrolü (asfa9592)
 def sifre_dogrula(girilen_sifre):
     return str(girilen_sifre).strip() == "asfa9592"
 
@@ -79,6 +79,10 @@ if "dersler" not in st.session_state:
 if "ogretmen_tercih" not in st.session_state:
     st.session_state["ogretmen_tercih"] = {}
 
+if "kapali_saatler" not in st.session_state:
+    # Yapı: {"Ahmet Yılmaz": {"Pazartesi": [1, 2], "Salı": [5, 6]}}
+    st.session_state["kapali_saatler"] = {}
+
 if "nobet_yerleri" not in st.session_state:
     st.session_state["nobet_yerleri"] = ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat"]
 
@@ -91,8 +95,8 @@ if "aylik_nobet_gecmisi" not in st.session_state:
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
 tum_bildirimler = [
-    {"tarih": "2026-08-28", "baslik": "v1.1 - Hafıza & Nöbet Rotasyon İyileştirmesi", "icerik": "Kurumsal oturum hafızası, aylık eşit nöbet dağıtımı ve performans optimizasyonları yapıldı."},
-    {"tarih": "2026-08-27", "baslik": "v1.0 - Resmî Kararlı Sürüm", "icerik": "Iğdır AR-GE akıllı okul ders programı ve nöbet dağıtım sistemi kullanıma açıldı."}
+    {"tarih": "2026-08-28", "baslik": "v1.2 - Öğretmen Gün & Saat Kapatma Özelliği", "icerik": "Öğretmenlere gün ve ders saati bazında özel kapatma/kilitleme kısıtları eklendi."},
+    {"tarih": "2026-08-28", "baslik": "v1.1 - Hafıza & Nöbet Rotasyon İyileştirmesi", "icerik": "Kurumsal oturum hafızası, aylık eşit nöbet dağıtımı ve performans optimizasyonları yapıldı."}
 ]
 
 # ==========================================
@@ -169,6 +173,7 @@ if not st.session_state["giris_yapildi"]:
                     if kayitli_veri:
                         st.session_state["dersler"] = kayitli_veri.get("dersler", [])
                         st.session_state["ogretmen_tercih"] = kayitli_veri.get("ogretmen_tercih", {})
+                        st.session_state["kapali_saatler"] = kayitli_veri.get("kapali_saatler", {})
                         st.session_state["nobet_yerleri"] = kayitli_veri.get("nobet_yerleri", ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat"])
                         st.session_state["sonuclar"] = kayitli_veri.get("sonuclar", None)
                         st.session_state["aylik_nobet_gecmisi"] = kayitli_veri.get("aylik_nobet_gecmisi", {})
@@ -232,6 +237,7 @@ with st.sidebar:
     st.markdown("---")
     menuler = [
         ("✏️ Veri & Öğretmen Hafızası", "Veri"),
+        ("🔒 Öğretmen Gün/Saat Kapatma", "Kapatma"),
         ("🎓 Sınıf Programları", "Sınıflar"),
         ("👨‍🏫 Öğretmen Programları (A4)", "Öğretmenler"),
         ("📊 Genel Çarşaf Tablo & Excel", "Carsaf"),
@@ -268,7 +274,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# MODÜL 1: VERİ & ÖĞRETMEN HAFIZASI
+# 1. VERİ & ÖĞRETMEN HAFIZASI
 # ==========================================
 if st.session_state["sayfa"] == "Veri":
     st.subheader("📥 Veri Girişi & Okul Hafızası")
@@ -292,10 +298,13 @@ if st.session_state["sayfa"] == "Veri":
                                 d["Öğretmen"] = yeni_ad
                         if giden_ogr in st.session_state["ogretmen_tercih"]:
                             st.session_state["ogretmen_tercih"][yeni_ad] = st.session_state["ogretmen_tercih"].pop(giden_ogr)
+                        if giden_ogr in st.session_state["kapali_saatler"]:
+                            st.session_state["kapali_saatler"][yeni_ad] = st.session_state["kapali_saatler"].pop(giden_ogr)
                         
                         veri_kaydet(st.session_state["kurum_kodu"], {
                             "dersler": st.session_state["dersler"],
                             "ogretmen_tercih": st.session_state["ogretmen_tercih"],
+                            "kapali_saatler": st.session_state["kapali_saatler"],
                             "nobet_yerleri": st.session_state["nobet_yerleri"],
                             "sonuclar": st.session_state["sonuclar"],
                             "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
@@ -306,15 +315,26 @@ if st.session_state["sayfa"] == "Veri":
     c_card1, c_card2 = st.columns([1, 1])
     with c_card1:
         st.markdown("##### 📥 Excel Şablonu")
+        st.caption("Dersleri, nöbet yerlerini ve öğretmenlerin kapalı saatlerini bu şablondan girebilirsiniz:")
         sablon_d = st.session_state["dersler"] if st.session_state["dersler"] else [{"Sınıf": "9-A", "Ders": "Matematik", "Öğretmen": "Ahmet Yılmaz", "Saat Dağılımı": "2+2+2"}]
         sablon_o = [{"Öğretmen": k, "Boş Gün İsteği": v.get("bos", ""), "Zaman Kısıtı": v.get("zaman", "Tüm Gün"), "Nöbetten Muaf": "Evet" if v.get("muaf") else "Hayır"} for k, v in st.session_state["ogretmen_tercih"].items()] if st.session_state["ogretmen_tercih"] else [{"Öğretmen": "Ahmet Yılmaz", "Boş Gün İsteği": "", "Zaman Kısıtı": "Tüm Gün", "Nöbetten Muaf": "Hayır"}]
         sablon_yerler = [{"Nöbet Yeri Adı": y} for y in st.session_state["nobet_yerleri"] if y != "-"]
+        
+        # Kapalı saatler Excel sayfası
+        sablon_kapali = []
+        for ogr, g_dict in st.session_state["kapali_saatler"].items():
+            for g, s_list in g_dict.items():
+                if s_list:
+                    sablon_kapali.append({"Öğretmen": ogr, "Gün": g, "Kapalı Saatler": ",".join(map(str, s_list))})
+        if not sablon_kapali:
+            sablon_kapali = [{"Öğretmen": "Ahmet Yılmaz", "Gün": "Salı", "Kapalı Saatler": "1,2"}]
         
         buf_sablon = io.BytesIO()
         with pd.ExcelWriter(buf_sablon, engine="openpyxl") as writer:
             pd.DataFrame(sablon_d).to_excel(writer, sheet_name="Ders_Listesi", index=False)
             pd.DataFrame(sablon_o).to_excel(writer, sheet_name="Ogretmenler", index=False)
             pd.DataFrame(sablon_yerler).to_excel(writer, sheet_name="Nobet_Yerleri", index=False)
+            pd.DataFrame(sablon_kapali).to_excel(writer, sheet_name="Kapali_Saatler", index=False)
         
         st.download_button("📥 Excel Şablonunu İndir (.xlsx)", buf_sablon.getvalue(), f"Okul_Sablon_{st.session_state['kurum_kodu']}.xlsx", use_container_width=True)
 
@@ -333,6 +353,19 @@ if st.session_state["sayfa"] == "Veri":
                     if yerler:
                         st.session_state["nobet_yerleri"] = yerler
                 
+                # Kapalı Saatleri Excel'den Çek
+                if "Kapali_Saatler" in xls.sheet_names:
+                    df_k = pd.read_excel(xls, sheet_name="Kapali_Saatler").fillna("")
+                    for _, r in df_k.iterrows():
+                        ogr_k = str(r.get("Öğretmen", "")).strip()
+                        gun_k = str(r.get("Gün", "")).strip()
+                        saatler_raw = str(r.get("Kapalı Saatler", "")).strip()
+                        if ogr_k and gun_k in gunler and saatler_raw:
+                            if ogr_k not in st.session_state["kapali_saatler"]:
+                                st.session_state["kapali_saatler"][ogr_k] = {}
+                            s_list = [int(s.strip()) for s in saatler_raw.replace(";",",").split(",") if s.strip().isdigit()]
+                            st.session_state["kapali_saatler"][ogr_k][gun_k] = s_list
+                
                 st.session_state["dersler"] = df_d[["Sınıf", "Ders", "Öğretmen", "Saat Dağılımı"]].to_dict("records")
                 st.session_state["ogretmen_tercih"] = {}
                 for _, row in df_o.iterrows():
@@ -348,11 +381,12 @@ if st.session_state["sayfa"] == "Veri":
                 veri_kaydet(st.session_state["kurum_kodu"], {
                     "dersler": st.session_state["dersler"],
                     "ogretmen_tercih": st.session_state["ogretmen_tercih"],
+                    "kapali_saatler": st.session_state["kapali_saatler"],
                     "nobet_yerleri": st.session_state["nobet_yerleri"],
                     "sonuclar": st.session_state["sonuclar"],
                     "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                 })
-                st.success("✓ Veriler aktarıldı ve okul hafızasına kaydedildi!")
+                st.success("✓ Veriler ve kapalı saatler aktarıldı!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Excel şablon formatı geçersiz: {e}")
@@ -379,7 +413,7 @@ if st.session_state["sayfa"] == "Veri":
                     if in_ogr.strip() not in st.session_state["ogretmen_tercih"]:
                         st.session_state["ogretmen_tercih"][in_ogr.strip()] = {"bos": "", "zaman": "Tüm Gün", "muaf": False}
                     veri_kaydet(st.session_state["kurum_kodu"], {
-                        "dersler": st.session_state["dersler"], "ogretmen_tercih": st.session_state["ogretmen_tercih"], "nobet_yerleri": st.session_state["nobet_yerleri"], "sonuclar": st.session_state["sonuclar"], "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
+                        "dersler": st.session_state["dersler"], "ogretmen_tercih": st.session_state["ogretmen_tercih"], "kapali_saatler": st.session_state["kapali_saatler"], "nobet_yerleri": st.session_state["nobet_yerleri"], "sonuclar": st.session_state["sonuclar"], "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                     })
                     st.rerun()
 
@@ -390,8 +424,9 @@ if st.session_state["sayfa"] == "Veri":
         if st.button("🗑️ Verileri Sıfırla", use_container_width=True):
             st.session_state["dersler"] = []
             st.session_state["ogretmen_tercih"] = {}
+            st.session_state["kapali_saatler"] = {}
             st.session_state["sonuclar"] = None
-            veri_kaydet(st.session_state["kurum_kodu"], {"dersler": [], "ogretmen_tercih": {}, "nobet_yerleri": st.session_state["nobet_yerleri"], "sonuclar": None, "aylik_nobet_gecmisi": {}})
+            veri_kaydet(st.session_state["kurum_kodu"], {"dersler": [], "ogretmen_tercih": {}, "kapali_saatler": {}, "nobet_yerleri": st.session_state["nobet_yerleri"], "sonuclar": None, "aylik_nobet_gecmisi": {}})
             st.rerun()
 
     if st.session_state["dersler"]:
@@ -403,41 +438,67 @@ if st.session_state["sayfa"] == "Veri":
             df_goster = df_dersler
         st.dataframe(df_goster, use_container_width=True, hide_index=True)
 
-    if st.session_state["dersler"]:
-        with st.expander("🛡️ Öğretmen İzin & Zaman Kısıtları", expanded=False):
-            ogr_filtre = st.text_input("🔍 Öğretmen Ara:", placeholder="İsim...", key="filter_ogr_kisit")
-            gosterilecek_ogretmenler = [o for o in mevcut_ogretmenler if ogr_filtre.lower() in o.lower()] if ogr_filtre else mevcut_ogretmenler
+# ==========================================
+# 2. ÖĞRETMEN GÜN / SAAT KAPATMA MODÜLÜ
+# ==========================================
+elif st.session_state["sayfa"] == "Kapatma":
+    st.subheader("🔒 Öğretmen Gün & Ders Saati Kapatma (Kilit)")
+    st.caption("Belirli öğretmenlerin süt izni, idari nöbeti veya toplantısı için seçilen gün ve saatlere ders atanmasını engelleyebilirsiniz:")
 
-            for ogr in gosterilecek_ogretmenler:
-                if ogr not in st.session_state["ogretmen_tercih"]:
-                    st.session_state["ogretmen_tercih"][ogr] = {"bos": "", "zaman": "Tüm Gün", "muaf": False}
+    mevcut_ogretmenler = sorted(list(set([d["Öğretmen"] for d in st.session_state["dersler"]])))
+    if mevcut_ogretmenler:
+        c_k1, c_k2 = st.columns([1.5, 3])
+        with c_k1:
+            sec_ogr_kilit = st.selectbox("İşlem Yapılacak Öğretmen:", mevcut_ogretmenler)
+        
+        if sec_ogr_kilit:
+            if sec_ogr_kilit not in st.session_state["kapali_saatler"]:
+                st.session_state["kapali_saatler"][sec_ogr_kilit] = {}
+            
+            st.markdown(f"##### 🕒 {sec_ogr_kilit} İçin Kapatılacak Ders Saatleri")
+            max_s = max(gunluk_saatler.values())
+            
+            for g in gunler:
+                g_saat = gunluk_saatler[g]
+                mevcut_kapali = st.session_state["kapali_saatler"][sec_ogr_kilit].get(g, [])
                 
-                c_o1, c_o2, c_o3, c_o4 = st.columns([3, 2.5, 2.5, 1.5])
-                with c_o1:
-                    st.write(f"**{ogr}**")
-                with c_o2:
-                    st.session_state["ogretmen_tercih"][ogr]["bos"] = st.selectbox(
-                        f"Boş Gün ({ogr})", ["", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"],
-                        index=["", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"].index(st.session_state["ogretmen_tercih"][ogr].get("bos", "")),
+                c_g1, c_g2 = st.columns([1.5, 4])
+                with c_g1:
+                    st.write(f"**{g}** ({g_saat} Saat)")
+                with c_g2:
+                    secilen_saatler = st.multiselect(
+                        f"{g} Kapalı Saatler",
+                        options=list(range(1, g_saat + 1)),
+                        default=[s for s in mevcut_kapali if s <= g_saat],
+                        key=f"kilit_{sec_ogr_kilit}_{g}",
                         label_visibility="collapsed"
                     )
-                with c_o3:
-                    st.session_state["ogretmen_tercih"][ogr]["zaman"] = st.selectbox(
-                        f"Zaman ({ogr})", ["Tüm Gün", "Sadece Sabah", "Sadece Öğle"],
-                        index=["Tüm Gün", "Sadece Sabah", "Sadece Öğle"].index(st.session_state["ogretmen_tercih"][ogr].get("zaman", "Tüm Gün")),
-                        label_visibility="collapsed"
-                    )
-                with c_o4:
-                    st.session_state["ogretmen_tercih"][ogr]["muaf"] = st.checkbox("Nöbetten Muaf", value=st.session_state["ogretmen_tercih"][ogr].get("muaf", False), key=f"chk_m_{ogr}")
+                    st.session_state["kapali_saatler"][sec_ogr_kilit][g] = secilen_saatler
 
+            if st.button("💾 Kapalı Saat Kısıtlarını Kaydet", type="primary"):
+                veri_kaydet(st.session_state["kurum_kodu"], {
+                    "dersler": st.session_state["dersler"],
+                    "ogretmen_tercih": st.session_state["ogretmen_tercih"],
+                    "kapali_saatler": st.session_state["kapali_saatler"],
+                    "nobet_yerleri": st.session_state["nobet_yerleri"],
+                    "sonuclar": st.session_state["sonuclar"],
+                    "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
+                })
+                st.success(f"✓ {sec_ogr_kilit} için saat kısıtları başarıyla kaydedildi!")
+    else:
+        st.info("Lütfen önce 'Veri & Öğretmen Hafızası' menüsünden ders listesi ekleyin.")
+
+# ==========================================
+# OPTİMİZASYON VE HESAPLAMA MOTORU (KİLİTLİ SAATLER DAHİL)
+# ==========================================
+if st.session_state["sayfa"] in ["Veri", "Kapatma"] and st.session_state["dersler"]:
     st.markdown("<br>", unsafe_allow_html=True)
-    
-    if st.button("🚀 Çakışmasız Ders Programını Hesapla ve Okul Hafızasına Kaydet", type="primary", use_container_width=True):
+    if st.button("🚀 Çakışmasız ve Kısıtlara Uygun Ders Programını Hesapla", type="primary", use_container_width=True):
         dersler = [d for d in st.session_state["dersler"] if str(d.get("Sınıf","")).strip() and str(d.get("Öğretmen","")).strip()]
         if not dersler:
             st.error("Lütfen önce ders verisi ekleyin.")
         else:
-            with st.spinner("Optimizasyon motoru çalışıyor..."):
+            with st.spinner("Optimizasyon motoru kapalı saatleri ve çakışmaları analiz ediyor..."):
                 gun_baslangic = {}
                 toplam_saat = 0
                 for g in gunler:
@@ -463,6 +524,7 @@ if st.session_state["sayfa"] == "Veri":
                     for t in range(toplam_saat):
                         x[(b_idx, t)] = model.NewBoolVar(f"b_{b_idx}_t_{t}")
 
+                # Blok Kısıtları
                 for b_idx, blok in enumerate(blok_listesi):
                     gecerli = []
                     for g in gunler:
@@ -475,6 +537,7 @@ if st.session_state["sayfa"] == "Veri":
                         if t not in gecerli:
                             model.Add(x[(b_idx, t)] == 0)
 
+                # Çakışma Kısıtları
                 for s in siniflar:
                     for t in range(toplam_saat):
                         model.Add(sum([x[(b_idx, t - off)] for b_idx, blok in enumerate(blok_listesi) if blok["sinif"] == s for off in range(blok["sure"]) if t - off >= 0]) <= 1)
@@ -483,6 +546,7 @@ if st.session_state["sayfa"] == "Veri":
                     for t in range(toplam_saat):
                         model.Add(sum([x[(b_idx, t - off)] for b_idx, blok in enumerate(blok_listesi) if blok["ogretmen"] == ogr for off in range(blok["sure"]) if t - off >= 0]) <= 1)
 
+                # Kesintisiz Ders
                 for s in siniflar:
                     for g in gunler:
                         g_bas = gun_baslangic[g]
@@ -493,10 +557,12 @@ if st.session_state["sayfa"] == "Veri":
                             akt_p = sum([x[(b_idx, (t-1) - off)] for b_idx, blok in enumerate(blok_listesi) if blok["sinif"] == s for off in range(blok["sure"]) if (t-1) - off >= 0])
                             model.Add(akt_t <= akt_p)
 
+                # Boş Gün, Zaman Kısıtı ve ÖZEL KAPALI SAATLER
                 for ogr in ogretmenler:
                     trc = st.session_state["ogretmen_tercih"].get(ogr, {})
                     bos_g = trc.get("bos", "")
                     zaman = trc.get("zaman", "Tüm Gün")
+                    kapali_dict = st.session_state["kapali_saatler"].get(ogr, {})
 
                     for g in gunler:
                         g_bas = gun_baslangic[g]
@@ -521,6 +587,18 @@ if st.session_state["sayfa"] == "Veri":
                                 for b_idx, blok in enumerate(blok_listesi):
                                     if blok["ogretmen"] == ogr:
                                         model.Add(x[(b_idx, t)] == 0)
+
+                        # Özel Kapalı Ders Saatleri Kilidi (1. ders, 2. ders vb.)
+                        kapali_saatler_gun = kapali_dict.get(g, [])
+                        for k_saat in kapali_saatler_gun:
+                            saat_idx = k_saat - 1
+                            if 0 <= saat_idx < g_sayi:
+                                t_kapali = g_bas + saat_idx
+                                for b_idx, blok in enumerate(blok_listesi):
+                                    if blok["ogretmen"] == ogr:
+                                        for off in range(blok["sure"]):
+                                            if t_kapali - off >= 0:
+                                                model.Add(x[(b_idx, t_kapali - off)] == 0)
 
                 solver = cp_model.CpSolver()
                 solver.parameters.max_time_in_seconds = 30.0
@@ -555,17 +633,18 @@ if st.session_state["sayfa"] == "Veri":
                     veri_kaydet(st.session_state["kurum_kodu"], {
                         "dersler": st.session_state["dersler"],
                         "ogretmen_tercih": st.session_state["ogretmen_tercih"],
+                        "kapali_saatler": st.session_state["kapali_saatler"],
                         "nobet_yerleri": st.session_state["nobet_yerleri"],
                         "sonuclar": sonuclar,
                         "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                     })
-                    st.success("✓ Ders Programı Başarıyla Oluşturuldu ve Kaydedildi!")
+                    st.success("✓ Ders Programı Kapalı Saat Kısıtlarına Tam Uyumlu Olarak Oluşturuldu!")
                 else:
                     st.session_state["sonuclar"] = None
-                    st.error("✗ Çakışmasız çözüm bulunamadı. Lütfen kısıtları kontrol edin.")
+                    st.error("✗ Çakışmasız çözüm bulunamadı. Lütfen kapalı saatleri veya kısıtları gevşetiniz.")
 
 # ==========================================
-# MODÜL 2: SINIF PROGRAMLARI
+# 3. SINIF PROGRAMLARI
 # ==========================================
 elif st.session_state["sayfa"] == "Sınıflar":
     st.subheader(f"🎓 {st.session_state['okul_adi']} - Sınıf Ders Programları")
@@ -601,7 +680,7 @@ elif st.session_state["sayfa"] == "Sınıflar":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# MODÜL 3: ÖĞRETMEN PROGRAMLARI
+# 4. ÖĞRETMEN PROGRAMLARI
 # ==========================================
 elif st.session_state["sayfa"] == "Öğretmenler":
     st.subheader(f"👨‍🏫 {st.session_state['okul_adi']} - Öğretmen Ders Programları & Tebliğ")
@@ -684,7 +763,7 @@ elif st.session_state["sayfa"] == "Öğretmenler":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# MODÜL 4: GENEL ÇARŞAF TABLOLAR & EXCEL
+# 5. GENEL ÇARŞAF TABLOLAR & EXCEL
 # ==========================================
 elif st.session_state["sayfa"] == "Carsaf":
     st.subheader(f"📊 {st.session_state['okul_adi']} - Genel Çarşaf Listesi")
@@ -739,7 +818,7 @@ elif st.session_state["sayfa"] == "Carsaf":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# MODÜL 5: AYLIK EŞİT NÖBET DAĞITIMI
+# 6. AYLIK EŞİT NÖBET DAĞITIMI
 # ==========================================
 elif st.session_state["sayfa"] == "Nöbet":
     st.subheader("🛡️ Akıllı Aylık Eşit Nöbet Dağıtım Motoru")
@@ -814,6 +893,7 @@ elif st.session_state["sayfa"] == "Nöbet":
                     veri_kaydet(st.session_state["kurum_kodu"], {
                         "dersler": st.session_state["dersler"],
                         "ogretmen_tercih": st.session_state["ogretmen_tercih"],
+                        "kapali_saatler": st.session_state["kapali_saatler"],
                         "nobet_yerleri": st.session_state["nobet_yerleri"],
                         "sonuclar": sonuclar,
                         "aylik_nobetler": aylik_cizelge,
@@ -852,7 +932,7 @@ elif st.session_state["sayfa"] == "Nöbet":
         st.info("Lütfen önce ders programını oluşturun.")
 
 # ==========================================
-# MODÜL 6: HATA & TALEP BİLDİR
+# MODÜL 7: HATA & TALEP BİLDİR
 # ==========================================
 elif st.session_state["sayfa"] == "HataBildir":
     st.subheader("💬 Okul Hata, Sorun & Talep Bildirim Merkezi")
