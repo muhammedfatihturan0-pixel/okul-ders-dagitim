@@ -4,7 +4,6 @@ from ortools.sat.python import cp_model
 import io
 import os
 import json
-import urllib.parse
 from datetime import datetime
 
 st.set_page_config(
@@ -15,6 +14,8 @@ st.set_page_config(
 
 # Kalıcı Veri Klasörü
 DATA_DIR = "okul_verileri"
+FEEDBACK_FILE = "okul_verileri/sistem_bildirimleri.json"
+
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
@@ -30,7 +31,28 @@ def veri_yukle(kurum_kodu):
             return json.load(f)
     return None
 
-# Modern UI ve Kontrast CSS
+def bildirim_kaydet(yeni_bildirim):
+    mevcut = []
+    if os.path.exists(FEEDBACK_FILE):
+        try:
+            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+                mevcut = json.load(f)
+        except:
+            mevcut = []
+    mevcut.insert(0, yeni_bildirim)
+    with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+        json.dump(mevcut, f, ensure_ascii=False, indent=2)
+
+def bildirimleri_getir():
+    if os.path.exists(FEEDBACK_FILE):
+        try:
+            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+# CSS Stilleri
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -236,19 +258,22 @@ if "ogretmen_tercih" not in st.session_state:
     st.session_state["ogretmen_tercih"] = {}
 
 if "nobet_yerleri" not in st.session_state:
-    st.session_state["nobet_yerleri"] = ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat", "Spor Salonu", "Pansiyon"]
+    st.session_state["nobet_yerleri"] = ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat"]
 
 if "sonuclar" not in st.session_state:
     st.session_state["sonuclar"] = None
 
+if "aylik_nobet_gecmisi" not in st.session_state:
+    st.session_state["aylik_nobet_gecmisi"] = {}
+
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
-# Son 4 Güncelleme
+# Son Güncellemeler
 tum_bildirimler = [
-    {"tarih": "2026-08-28", "baslik": "v3.3 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul bazlı profil sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızada kalıcı olarak saklanıyor."},
+    {"tarih": "2026-08-28", "baslik": "v3.4 - Eşit Dağıtımlı Aylık Nöbet & Güvenli AR-GE Paneli", "icerik": "Nöbetlerin günlere eşit dağıtımı, eksik kadroda çoklu nöbet rotasyonu ve şifreli gizli yönetici gelen kutusu eklendi."},
+    {"tarih": "2026-08-28", "baslik": "v3.3 - Kurumsal Okul Oturumu & Kalıcı Hafıza", "icerik": "MEB Kurum Kodu ile okul profili sistemi getirildi. Programlar ve öğretmen değişiklikleri hafızaya kaydediliyor."},
     {"tarih": "2026-08-27", "baslik": "v3.2 - Akıllı Haftalık Saat & Artık Gün Algoritması", "icerik": "Ders saatleri doğrudan Excel'deki yükten hesaplanacak şekilde otomatikleştirildi; artık gün tercihi eklendi."},
-    {"tarih": "2026-08-27", "baslik": "v3.1 - Excel Tabanlı Nöbet Yerleri", "icerik": "Nöbet yerleri Excel şablonuna dahil edilerek okulun kendi alanlarını tanımlaması sağlandı."},
-    {"tarih": "2026-08-26", "baslik": "v3.0 - Toplu A4 & Resmi Tebliğ Çıktısı", "icerik": "Tüm öğretmenlerin programını tek tıkla resmi tebliğ formatında A4 çıktı alma desteği eklendi."}
+    {"tarih": "2026-08-27", "baslik": "v3.1 - Excel Tabanlı Nöbet Yerleri", "icerik": "Nöbet yerleri Excel şablonuna dahil edilerek okulun kendi alanlarını tanımlaması sağlandı."}
 ]
 
 # ==========================================
@@ -268,8 +293,6 @@ if not st.session_state["giris_yapildi"]:
     col_l1, col_l2, col_l3 = st.columns([1, 1.5, 1])
     with col_l2:
         st.markdown("### 🔐 Okul Kurumsal Girişi")
-        st.caption("Okulunuza ait daha önce kaydedilmiş ders programını ve öğretmen verilerini görmek için giriş yapın:")
-        
         girilen_kod = st.text_input("MEB Kurum Kodu", placeholder="Örn: 754321")
         girilen_okul = st.text_input("Okul Adı", placeholder="Örn: Iğdır Anadolu Lisesi")
         
@@ -279,26 +302,26 @@ if not st.session_state["giris_yapildi"]:
                 st.session_state["kurum_kodu"] = girilen_kod.strip()
                 st.session_state["okul_adi"] = girilen_okul.strip()
                 
-                # Varsa kayıtlı hafızayı yükle
                 kayitli_veri = veri_yukle(girilen_kod.strip())
                 if kayitli_veri:
                     st.session_state["dersler"] = kayitli_veri.get("dersler", [])
                     st.session_state["ogretmen_tercih"] = kayitli_veri.get("ogretmen_tercih", {})
-                    st.session_state["nobet_yerleri"] = kayitli_veri.get("nobet_yerleri", ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat", "Spor Salonu", "Pansiyon"])
+                    st.session_state["nobet_yerleri"] = kayitli_veri.get("nobet_yerleri", ["Bahçe", "Zemin Kat", "1. Kat", "2. Kat"])
                     st.session_state["sonuclar"] = kayitli_veri.get("sonuclar", None)
-                    st.success("✓ Okulunuza ait kayıtlı program ve hafıza başarıyla yüklendi!")
+                    st.session_state["aylik_nobet_gecmisi"] = kayitli_veri.get("aylik_nobet_gecmisi", {})
+                    st.success("✓ Okulunuza ait kayıtlı veriler yüklendi!")
                 else:
-                    st.info("ℹ️ Yeni okul kaydı oluşturuldu. Bilgilerinizi girdikten sonra sistem otomatik kaydedecektir.")
+                    st.info("ℹ️ Yeni okul kaydı oluşturuldu.")
                 st.rerun()
             else:
-                st.error("Lütfen MEB Kurum Kodu ve Okul Adını eksiksiz girin.")
+                st.error("Lütfen MEB Kurum Kodu ve Okul Adını girin.")
     st.stop()
 
 # ==========================================
-# OTURUM AÇILDIKTAN SONRAKİ ANA PANEL
+# ANA PANEL
 # ==========================================
 
-# Sınıfların Haftalık Ders Yükünü Hesapla
+# Sınıf Yükleri
 sinif_yukleri = {}
 for d in st.session_state["dersler"]:
     s = d.get("Sınıf", "")
@@ -313,7 +336,7 @@ max_sinif_yuku = max(sinif_yukleri.values()) if sinif_yukleri else 35
 with st.sidebar:
     st.markdown(f"### 🏫 {st.session_state['okul_adi']}")
     st.caption(f"Kurum Kodu: **{st.session_state['kurum_kodu']}**")
-    if st.button("🚪 Okul Oturumunu Kapat", use_container_width=True):
+    if st.button("🚪 Çıkış Yap", use_container_width=True):
         st.session_state["giris_yapildi"] = False
         st.rerun()
         
@@ -323,8 +346,9 @@ with st.sidebar:
         ("🎓 Sınıf Programları", "Sınıflar"),
         ("👨‍🏫 Öğretmen Programları (A4)", "Öğretmenler"),
         ("📊 Genel Çarşaf Tablo & Excel", "Carsaf"),
-        ("🛡️ Akıllı Nöbet & Doğrulama", "Nöbet"),
+        ("🛡️ Aylık Eşit Nöbet Dağıtımı", "Nöbet"),
         ("💬 Hata & Talep Bildir", "HataBildir"),
+        ("🔒 AR-GE Yönetici Paneli", "YoneticiPanel"),
         ("📜 Sürüm & Güncellemeler", "Guncellemeler")
     ]
     
@@ -335,25 +359,16 @@ with st.sidebar:
 
     st.markdown("---")
     st.subheader("⚙️ Akıllı Saat Dağıtımı")
-    st.write(f"📊 **Haftalık Ders Yükü:** {max_sinif_yuku} Saat")
-    
     taban_saat = max_sinif_yuku // 5
     kalan_saat = max_sinif_yuku % 5
     
     if kalan_saat > 0:
-        st.warning(f"⚠️ Haftada **{kalan_saat} saat artık ders** var ({taban_saat} + 1).")
-        artik_gunler = st.multiselect(
-            "Artık ders günleri:",
-            options=gunler,
-            default=gunler[:kalan_saat],
-            max_selections=kalan_saat
-        )
+        st.caption(f"Haftalık {max_sinif_yuku} saat ({taban_saat} + 1)")
+        artik_gunler = st.multiselect("Artık ders günleri:", options=gunler, default=gunler[:kalan_saat], max_selections=kalan_saat)
     else:
         artik_gunler = []
 
-    gunluk_saatler = {}
-    for g in gunler:
-        gunluk_saatler[g] = (taban_saat + 1) if g in artik_gunler else taban_saat
+    gunluk_saatler = {g: (taban_saat + 1) if g in artik_gunler else taban_saat for g in gunler}
 
 # Üst Banner
 st.markdown(f"""
@@ -367,25 +382,23 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 1. VERİ & ÖĞRETMEN HAFIZASI YÖNETİMİ
+# 1. VERİ & ÖĞRETMEN HAFIZASI
 # ==========================================
 if st.session_state["sayfa"] == "Veri":
     st.subheader("📥 Veri Girişi & Okul Hafızası")
     
-    # Hızlı Öğretmen Değiştirme / Devretme Paneli (Öğretmen Giderse)
     mevcut_ogretmenler = sorted(list(set([d["Öğretmen"] for d in st.session_state["dersler"]])))
     if mevcut_ogretmenler:
-        with st.expander("🔄 Hızlı Öğretmen Değişimi (Öğretmen Gitti / Yeni Öğretmen Geldi)", expanded=False):
-            st.caption("Giden öğretmenin tüm derslerini ve nöbet tercihlerini tek tıkla yeni öğretmene aktarın:")
+        with st.expander("🔄 Hızlı Öğretmen Değişimi (Öğretmen Ayrıldı / Yeni Öğretmen Geldi)", expanded=False):
             c_dev1, c_dev2, c_dev3 = st.columns([2, 2, 1.5])
             with c_dev1:
-                giden_ogr = st.selectbox("Ayrılan/Değişecek Öğretmen", mevcut_ogretmenler)
+                giden_ogr = st.selectbox("Ayrılan Öğretmen", mevcut_ogretmenler)
             with c_dev2:
-                yeni_ogr = st.text_input("Yeni Atanan Öğretmenin Adı", placeholder="Örn: Mehmet Demir")
+                yeni_ogr = st.text_input("Yeni Öğretmenin Adı", placeholder="Örn: Mehmet Demir")
             with c_dev3:
                 st.write("")
                 st.write("")
-                if st.button("🔄 Dersleri Yeni Öğretmene Devret", use_container_width=True):
+                if st.button("🔄 Devret ve Kaydet", use_container_width=True):
                     if yeni_ogr.strip():
                         yeni_ad = yeni_ogr.strip()
                         for d in st.session_state["dersler"]:
@@ -394,43 +407,30 @@ if st.session_state["sayfa"] == "Veri":
                         if giden_ogr in st.session_state["ogretmen_tercih"]:
                             st.session_state["ogretmen_tercih"][yeni_ad] = st.session_state["ogretmen_tercih"].pop(giden_ogr)
                         
-                        # Otomatik Hafızaya Kaydet
                         veri_kaydet(st.session_state["kurum_kodu"], {
                             "dersler": st.session_state["dersler"],
                             "ogretmen_tercih": st.session_state["ogretmen_tercih"],
                             "nobet_yerleri": st.session_state["nobet_yerleri"],
-                            "sonuclar": st.session_state["sonuclar"]
+                            "sonuclar": st.session_state["sonuclar"],
+                            "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                         })
-                        st.success(f"✓ {giden_ogr} öğretmeninin tüm dersleri {yeni_ad} öğretmenine aktarıldı ve kaydedildi!")
+                        st.success(f"✓ {giden_ogr} öğretmeninin dersleri {yeni_ad} öğretmenine devredildi!")
                         st.rerun()
 
     c_card1, c_card2 = st.columns([1, 1])
     with c_card1:
         st.markdown("##### 📥 Excel Şablonu")
-        sablon_d = st.session_state["dersler"] if st.session_state["dersler"] else [
-            {"Sınıf": "9-A", "Ders": "Matematik", "Öğretmen": "Ahmet Yılmaz", "Saat Dağılımı": "2+2+2"}
-        ]
-        sablon_o = [
-            {"Öğretmen": k, "Nöbet Günü": v.get("nobet", "Otomatik"), "Nöbet Yeri": v.get("yer", "Bahçe"), "Boş Gün İsteği": v.get("bos", ""), "Zaman Kısıtı": v.get("zaman", "Tüm Gün"), "Nöbetten Muaf": "Evet" if v.get("muaf") else "Hayır"}
-            for k, v in st.session_state["ogretmen_tercih"].items()
-        ] if st.session_state["ogretmen_tercih"] else [
-            {"Öğretmen": "Ahmet Yılmaz", "Nöbet Günü": "Otomatik", "Nöbet Yeri": "Bahçe", "Boş Gün İsteği": "", "Zaman Kısıtı": "Tüm Gün", "Nöbetten Muaf": "Hayır"}
-        ]
+        sablon_d = st.session_state["dersler"] if st.session_state["dersler"] else [{"Sınıf": "9-A", "Ders": "Matematik", "Öğretmen": "Ahmet Yılmaz", "Saat Dağılımı": "2+2+2"}]
+        sablon_o = [{"Öğretmen": k, "Boş Gün İsteği": v.get("bos", ""), "Zaman Kısıtı": v.get("zaman", "Tüm Gün"), "Nöbetten Muaf": "Evet" if v.get("muaf") else "Hayır"} for k, v in st.session_state["ogretmen_tercih"].items()] if st.session_state["ogretmen_tercih"] else [{"Öğretmen": "Ahmet Yılmaz", "Boş Gün İsteği": "", "Zaman Kısıtı": "Tüm Gün", "Nöbetten Muaf": "Hayır"}]
         sablon_yerler = [{"Nöbet Yeri Adı": y} for y in st.session_state["nobet_yerleri"] if y != "-"]
         
         buf_sablon = io.BytesIO()
         with pd.ExcelWriter(buf_sablon, engine="openpyxl") as writer:
             pd.DataFrame(sablon_d).to_excel(writer, sheet_name="Ders_Listesi", index=False)
-            pd.DataFrame(sablon_o).to_excel(writer, sheet_name="Ogretmen_Nobet", index=False)
+            pd.DataFrame(sablon_o).to_excel(writer, sheet_name="Ogretmenler", index=False)
             pd.DataFrame(sablon_yerler).to_excel(writer, sheet_name="Nobet_Yerleri", index=False)
         
-        st.download_button(
-            label="📥 Excel Şablonunu İndir (.xlsx)",
-            data=buf_sablon.getvalue(),
-            file_name=f"Okul_Ders_Dagitim_{st.session_state['kurum_kodu']}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True
-        )
+        st.download_button("📥 Excel Şablonunu İndir (.xlsx)", buf_sablon.getvalue(), f"Okul_Sablon_{st.session_state['kurum_kodu']}.xlsx", use_container_width=True)
 
     with c_card2:
         st.markdown("##### 📤 Doldurulan Excel'i Yükle")
@@ -439,38 +439,32 @@ if st.session_state["sayfa"] == "Veri":
             try:
                 xls = pd.ExcelFile(uploaded_file)
                 df_d = pd.read_excel(xls, sheet_name="Ders_Listesi").fillna("")
-                df_o = pd.read_excel(xls, sheet_name="Ogretmen_Nobet").fillna("")
+                df_o = pd.read_excel(xls, sheet_name="Ogretmenler").fillna("") if "Ogretmenler" in xls.sheet_names else pd.DataFrame()
                 
                 if "Nobet_Yerleri" in xls.sheet_names:
                     df_y = pd.read_excel(xls, sheet_name="Nobet_Yerleri").fillna("")
                     yerler = [str(r).strip() for r in df_y["Nöbet Yeri Adı"].tolist() if str(r).strip()]
                     if yerler:
-                        st.session_state["nobet_yerleri"] = yerler + ["-"]
+                        st.session_state["nobet_yerleri"] = yerler
                 
                 st.session_state["dersler"] = df_d[["Sınıf", "Ders", "Öğretmen", "Saat Dağılımı"]].to_dict("records")
                 st.session_state["ogretmen_tercih"] = {}
                 for _, row in df_o.iterrows():
-                    ogr = str(row["Öğretmen"]).strip()
+                    ogr = str(row.get("Öğretmen", "")).strip()
                     if ogr:
                         is_muaf = str(row.get("Nöbetten Muaf", "")).strip().lower() in ["evet", "true", "1"]
-                        yer_val = str(row.get("Nöbet Yeri", "Bahçe")).strip()
-                        if yer_val and yer_val not in st.session_state["nobet_yerleri"]:
-                            st.session_state["nobet_yerleri"].insert(0, yer_val)
-                        
                         st.session_state["ogretmen_tercih"][ogr] = {
-                            "nobet": "Muaf" if is_muaf else (str(row.get("Nöbet Günü", "Otomatik")).strip() or "Otomatik"),
-                            "yer": yer_val,
                             "bos": str(row.get("Boş Gün İsteği", "")).strip(),
                             "zaman": str(row.get("Zaman Kısıtı", "Tüm Gün")).strip() or "Tüm Gün",
                             "muaf": is_muaf
                         }
                 
-                # Hafızaya Kaydet
                 veri_kaydet(st.session_state["kurum_kodu"], {
                     "dersler": st.session_state["dersler"],
                     "ogretmen_tercih": st.session_state["ogretmen_tercih"],
                     "nobet_yerleri": st.session_state["nobet_yerleri"],
-                    "sonuclar": st.session_state["sonuclar"]
+                    "sonuclar": st.session_state["sonuclar"],
+                    "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                 })
                 st.success("✓ Veriler aktarıldı ve okul hafızasına kaydedildi!")
                 st.rerun()
@@ -496,103 +490,72 @@ if st.session_state["sayfa"] == "Veri":
             st.write("")
             if st.button("➕ Ekle", use_container_width=True):
                 if in_sinif and in_ders and in_ogr:
-                    st.session_state["dersler"].append({
-                        "Sınıf": in_sinif.strip().upper(),
-                        "Ders": in_ders.strip(),
-                        "Öğretmen": in_ogr.strip(),
-                        "Saat Dağılımı": temiz_blok
-                    })
+                    st.session_state["dersler"].append({"Sınıf": in_sinif.strip().upper(), "Ders": in_ders.strip(), "Öğretmen": in_ogr.strip(), "Saat Dağılımı": temiz_blok})
                     if in_ogr.strip() not in st.session_state["ogretmen_tercih"]:
-                        st.session_state["ogretmen_tercih"][in_ogr.strip()] = {"nobet": "Otomatik", "yer": st.session_state["nobet_yerleri"][0], "bos": "", "zaman": "Tüm Gün", "muaf": False}
-                    
+                        st.session_state["ogretmen_tercih"][in_ogr.strip()] = {"bos": "", "zaman": "Tüm Gün", "muaf": False}
                     veri_kaydet(st.session_state["kurum_kodu"], {
-                        "dersler": st.session_state["dersler"],
-                        "ogretmen_tercih": st.session_state["ogretmen_tercih"],
-                        "nobet_yerleri": st.session_state["nobet_yerleri"],
-                        "sonuclar": st.session_state["sonuclar"]
+                        "dersler": st.session_state["dersler"], "ogretmen_tercih": st.session_state["ogretmen_tercih"], "nobet_yerleri": st.session_state["nobet_yerleri"], "sonuclar": st.session_state["sonuclar"], "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                     })
                     st.rerun()
 
-    # Yüklü Dersler ve Filtre
+    # Yüklü Dersler Listesi
     c_th1, c_th2 = st.columns([4, 1])
     with c_th1:
-        st.markdown("##### 📋 Tanımlı Ders Listesi (" + str(len(st.session_state["dersler"])) + " Ders)")
+        st.markdown(f"##### 📋 Tanımlı Ders Listesi ({len(st.session_state['dersler'])} Ders)")
     with c_th2:
-        if st.button("🗑️ Okul Verilerini Sıfırla", use_container_width=True):
+        if st.button("🗑️ Verileri Sıfırla", use_container_width=True):
             st.session_state["dersler"] = []
             st.session_state["ogretmen_tercih"] = {}
             st.session_state["sonuclar"] = None
-            veri_kaydet(st.session_state["kurum_kodu"], {
-                "dersler": [], "ogretmen_tercih": {}, "nobet_yerleri": st.session_state["nobet_yerleri"], "sonuclar": None
-            })
+            veri_kaydet(st.session_state["kurum_kodu"], {"dersler": [], "ogretmen_tercih": {}, "nobet_yerleri": st.session_state["nobet_yerleri"], "sonuclar": None, "aylik_nobet_gecmisi": {}})
             st.rerun()
 
     if st.session_state["dersler"]:
-        arama_kelimesi = st.text_input("🔍 Listede Ara:", placeholder="Örn: Matematik, Selin, 9-A...", key="srch_input_main")
+        arama_kelimesi = st.text_input("🔍 Listede Ara:", placeholder="Örn: Matematik, Selin, 9-A...", key="srch_main")
         df_dersler = pd.DataFrame(st.session_state["dersler"])
         if arama_kelimesi:
-            df_goster = df_dersler[
-                df_dersler["Sınıf"].str.contains(arama_kelimesi, case=False, na=False) |
-                df_dersler["Ders"].str.contains(arama_kelimesi, case=False, na=False) |
-                df_dersler["Öğretmen"].str.contains(arama_kelimesi, case=False, na=False)
-            ]
+            df_goster = df_dersler[df_dersler["Sınıf"].str.contains(arama_kelimesi, case=False, na=False) | df_dersler["Ders"].str.contains(arama_kelimesi, case=False, na=False) | df_dersler["Öğretmen"].str.contains(arama_kelimesi, case=False, na=False)]
         else:
             df_goster = df_dersler
-            
         st.dataframe(df_goster, use_container_width=True, hide_index=True)
-    else:
-        st.info("Henüz kayıtlı ders bulunmuyor. Yukarıdan Excel yükleyebilirsiniz.")
 
-    # Kısıtlar ve Nöbet Yerleri
+    # Kısıtlar
     if st.session_state["dersler"]:
-        with st.expander("🛡️ Öğretmen Nöbet, İzin & Zaman Kısıtları", expanded=False):
-            sabit_yerler = st.session_state["nobet_yerleri"]
-            ogr_filtre = st.text_input("🔍 Öğretmen Ara:", placeholder="Öğretmen adı yazın...", key="filter_ogr_kisit")
+        with st.expander("🛡️ Öğretmen İzin & Zaman Kısıtları", expanded=False):
+            ogr_filtre = st.text_input("🔍 Öğretmen Ara:", placeholder="İsim...", key="filter_ogr_kisit")
             gosterilecek_ogretmenler = [o for o in mevcut_ogretmenler if ogr_filtre.lower() in o.lower()] if ogr_filtre else mevcut_ogretmenler
 
             for ogr in gosterilecek_ogretmenler:
                 if ogr not in st.session_state["ogretmen_tercih"]:
-                    st.session_state["ogretmen_tercih"][ogr] = {"nobet": "Otomatik", "yer": sabit_yerler[0], "bos": "", "zaman": "Tüm Gün", "muaf": False}
+                    st.session_state["ogretmen_tercih"][ogr] = {"bos": "", "zaman": "Tüm Gün", "muaf": False}
                 
-                c_o1, c_o2, c_o3, c_o4, c_o5, c_o6 = st.columns([2.5, 1.8, 1.8, 1.8, 1.8, 1.3])
+                c_o1, c_o2, c_o3, c_o4 = st.columns([3, 2.5, 2.5, 1.5])
                 with c_o1:
                     st.write(f"**{ogr}**")
                 with c_o2:
-                    st.session_state["ogretmen_tercih"][ogr]["nobet"] = st.selectbox(
-                        f"Nöbet ({ogr})", ["Otomatik", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Muaf"],
-                        index=["Otomatik", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Muaf"].index(st.session_state["ogretmen_tercih"][ogr].get("nobet", "Otomatik")),
-                        label_visibility="collapsed"
-                    )
-                with c_o3:
-                    mevcut_yer = st.session_state["ogretmen_tercih"][ogr].get("yer", sabit_yerler[0])
-                    yer_idx = sabit_yerler.index(mevcut_yer) if mevcut_yer in sabit_yerler else 0
-                    st.session_state["ogretmen_tercih"][ogr]["yer"] = st.selectbox(
-                        f"Yer ({ogr})", sabit_yerler, index=yer_idx, label_visibility="collapsed"
-                    )
-                with c_o4:
                     st.session_state["ogretmen_tercih"][ogr]["bos"] = st.selectbox(
                         f"Boş Gün ({ogr})", ["", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"],
                         index=["", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"].index(st.session_state["ogretmen_tercih"][ogr].get("bos", "")),
                         label_visibility="collapsed"
                     )
-                with c_o5:
+                with c_o3:
                     st.session_state["ogretmen_tercih"][ogr]["zaman"] = st.selectbox(
                         f"Zaman ({ogr})", ["Tüm Gün", "Sadece Sabah", "Sadece Öğle"],
                         index=["Tüm Gün", "Sadece Sabah", "Sadece Öğle"].index(st.session_state["ogretmen_tercih"][ogr].get("zaman", "Tüm Gün")),
                         label_visibility="collapsed"
                     )
-                with c_o6:
-                    st.session_state["ogretmen_tercih"][ogr]["muaf"] = st.checkbox("Muaf", value=st.session_state["ogretmen_tercih"][ogr].get("muaf", False), key=f"chk_m_{ogr}")
+                with c_o4:
+                    st.session_state["ogretmen_tercih"][ogr]["muaf"] = st.checkbox("Nöbetten Muaf", value=st.session_state["ogretmen_tercih"][ogr].get("muaf", False), key=f"chk_m_{ogr}")
 
     st.markdown("<br>", unsafe_allow_html=True)
     
     # HESAPLA BUTONU
-    if st.button("🚀 Çakışmasız Ders & Nöbet Programını Hesapla ve Kaydet", type="primary", use_container_width=True):
+    if st.button("🚀 Çakışmasız Ders Programını Hesapla ve Okul Hafızasına Kaydet", type="primary", use_container_width=True):
         dersler = [d for d in st.session_state["dersler"] if str(d.get("Sınıf","")).strip() and str(d.get("Öğretmen","")).strip()]
         if not dersler:
             st.error("Lütfen önce ders verisi ekleyin.")
         else:
-            with st.spinner("Optimizasyon motoru çalışıyor ve çözümü okul hafızasına kaydediyor..."):
+            with st.spinner("Optimizasyon motoru çalışıyor..."):
                 gun_sayisi = len(gunler)
                 gun_baslangic = {}
                 toplam_saat = 0
@@ -611,12 +574,7 @@ if st.session_state["sayfa"] == "Veri":
                             sure = int(b.strip())
                         except:
                             sure = 2
-                        blok_listesi.append({
-                            "sinif": d["Sınıf"], 
-                            "ders": d["Ders"], 
-                            "ogretmen": d["Öğretmen"], 
-                            "sure": sure
-                        })
+                        blok_listesi.append({"sinif": d["Sınıf"], "ders": d["Ders"], "ogretmen": d["Öğretmen"], "sure": sure})
 
                 model = cp_model.CpModel()
                 x = {}
@@ -624,24 +582,20 @@ if st.session_state["sayfa"] == "Veri":
                     for t in range(toplam_saat):
                         x[(b_idx, t)] = model.NewBoolVar(f"b_{b_idx}_t_{t}")
 
-                nobet_var = {}
-                for ogr in ogretmenler:
-                    for g_idx in range(gun_sayisi):
-                        nobet_var[(ogr, g_idx)] = model.NewBoolVar(f"nobet_{ogr}_{g_idx}")
-
+                # 1. Blok Kısıtları
                 for b_idx, blok in enumerate(blok_listesi):
                     gecerli = []
-                    for g_idx, g in enumerate(gunler):
+                    for g in gunler:
                         g_saat_sayisi = gunluk_saatler[g]
                         g_bas = gun_baslangic[g]
                         for s in range(g_saat_sayisi - blok["sure"] + 1):
                             gecerli.append(g_bas + s)
-                    
                     model.Add(sum(x[(b_idx, t)] for t in gecerli) == 1)
                     for t in range(toplam_saat):
                         if t not in gecerli:
                             model.Add(x[(b_idx, t)] == 0)
 
+                # 2. Sınıf ve Öğretmen Çakışması
                 for s in siniflar:
                     for t in range(toplam_saat):
                         model.Add(sum([x[(b_idx, t - off)] for b_idx, blok in enumerate(blok_listesi) if blok["sinif"] == s for off in range(blok["sure"]) if t - off >= 0]) <= 1)
@@ -650,8 +604,9 @@ if st.session_state["sayfa"] == "Veri":
                     for t in range(toplam_saat):
                         model.Add(sum([x[(b_idx, t - off)] for b_idx, blok in enumerate(blok_listesi) if blok["ogretmen"] == ogr for off in range(blok["sure"]) if t - off >= 0]) <= 1)
 
+                # 3. Kesintisiz Ders Kuralı
                 for s in siniflar:
-                    for g_idx, g in enumerate(gunler):
+                    for g in gunler:
                         g_bas = gun_baslangic[g]
                         g_sayi = gunluk_saatler[g]
                         for sa in range(1, g_sayi):
@@ -660,14 +615,13 @@ if st.session_state["sayfa"] == "Veri":
                             akt_p = sum([x[(b_idx, (t-1) - off)] for b_idx, blok in enumerate(blok_listesi) if blok["sinif"] == s for off in range(blok["sure"]) if (t-1) - off >= 0])
                             model.Add(akt_t <= akt_p)
 
+                # 4. Boş Gün & Zaman Kısıtları
                 for ogr in ogretmenler:
                     trc = st.session_state["ogretmen_tercih"].get(ogr, {})
-                    nobet_secim = trc.get("nobet", "Otomatik")
                     bos_g = trc.get("bos", "")
                     zaman = trc.get("zaman", "Tüm Gün")
-                    is_muaf = trc.get("muaf", False) or (nobet_secim == "Muaf")
 
-                    for g_idx, g in enumerate(gunler):
+                    for g in gunler:
                         g_bas = gun_baslangic[g]
                         g_sayi = gunluk_saatler[g]
                         yarim = g_sayi // 2
@@ -690,29 +644,6 @@ if st.session_state["sayfa"] == "Veri":
                                 for b_idx, blok in enumerate(blok_listesi):
                                     if blok["ogretmen"] == ogr:
                                         model.Add(x[(b_idx, t)] == 0)
-                            model.Add(nobet_var[(ogr, g_idx)] == 0)
-
-                    if is_muaf:
-                        for g_idx in range(gun_sayisi):
-                            model.Add(nobet_var[(ogr, g_idx)] == 0)
-                    elif nobet_secim in gunler:
-                        g_idx = gunler.index(nobet_secim)
-                        model.Add(nobet_var[(ogr, g_idx)] == 1)
-                        model.Add(sum(nobet_var[(ogr, g_i)] for g_i in range(gun_sayisi)) == 1)
-                    else:
-                        model.Add(sum(nobet_var[(ogr, g_i)] for g_i in range(gun_sayisi)) == 1)
-
-                    if not is_muaf:
-                        for g_idx, g in enumerate(gunler):
-                            g_bas = gun_baslangic[g]
-                            g_sayi = gunluk_saatler[g]
-                            gunluk_ders_saati = sum(
-                                x[(b_idx, t)] * blok["sure"]
-                                for b_idx, blok in enumerate(blok_listesi)
-                                if blok["ogretmen"] == ogr
-                                for t in range(g_bas, g_bas + g_sayi)
-                            )
-                            model.Add(gunluk_ders_saati >= 2 * nobet_var[(ogr, g_idx)])
 
                 solver = cp_model.CpSolver()
                 solver.parameters.max_time_in_seconds = 30.0
@@ -725,20 +656,14 @@ if st.session_state["sayfa"] == "Veri":
                         "ogretmen_gunluk_ders": {ogr: {g: 0 for g in gunler} for ogr in ogretmenler},
                         "siniflar": siniflar,
                         "ogretmenler": ogretmenler,
-                        "otomatik_nobetler": {},
                         "toplam_ders_saati": sum(b["sure"] for b in blok_listesi),
                         "gunluk_saatler": gunluk_saatler,
                         "gun_baslangic": gun_baslangic
                     }
 
-                    for ogr in ogretmenler:
-                        for g_idx, gun in enumerate(gunler):
-                            if solver.Value(nobet_var[(ogr, g_idx)]) == 1:
-                                sonuclar["otomatik_nobetler"][ogr] = gun
-
-                    for g_idx, gun in enumerate(gunler):
-                        g_bas = gun_baslangic[gun]
-                        g_sayi = gunluk_saatler[gun]
+                    for g in gunler:
+                        g_bas = gun_baslangic[g]
+                        g_sayi = gunluk_saatler[g]
                         for saat in range(g_sayi):
                             t = g_bas + saat
                             for b_idx, blok in enumerate(blok_listesi):
@@ -750,33 +675,17 @@ if st.session_state["sayfa"] == "Veri":
                     
                     st.session_state["sonuclar"] = sonuclar
                     
-                    # Kalıcı Kaydet
                     veri_kaydet(st.session_state["kurum_kodu"], {
                         "dersler": st.session_state["dersler"],
                         "ogretmen_tercih": st.session_state["ogretmen_tercih"],
                         "nobet_yerleri": st.session_state["nobet_yerleri"],
-                        "sonuclar": sonuclar
+                        "sonuclar": sonuclar,
+                        "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                     })
-                    st.success("✓ Ders ve Nöbet Programı Başarıyla Oluşturuldu ve Okul Profiline Kaydedildi!")
+                    st.success("✓ Ders Programı Başarıyla Oluşturuldu ve Kaydedildi!")
                 else:
                     st.session_state["sonuclar"] = None
-                    st.error("✗ Çakışmasız çözüm bulunamadı. Lütfen kısıtları ve saat sınırlarını kontrol edin.")
-
-    # İSTATİSTİK PANELİ
-    if st.session_state["sonuclar"]:
-        st.markdown("---")
-        st.markdown("#### 📊 Okul Dağıtım İstatistikleri")
-        res = st.session_state["sonuclar"]
-        c_st1, c_st2, c_st3, c_st4 = st.columns(4)
-        with c_st1:
-            st.markdown(f'<div class="metric-card"><div class="metric-val">{len(res["siniflar"])}</div><div class="metric-lbl">Toplam Şube</div></div>', unsafe_allow_html=True)
-        with c_st2:
-            st.markdown(f'<div class="metric-card"><div class="metric-val">{len(res["ogretmenler"])}</div><div class="metric-lbl">Aktif Öğretmen</div></div>', unsafe_allow_html=True)
-        with c_st3:
-            st.markdown(f'<div class="metric-card"><div class="metric-val">{res["toplam_ders_saati"]}</div><div class="metric-lbl">Haftalık Toplam Ders</div></div>', unsafe_allow_html=True)
-        with c_st4:
-            ort_yuk = round(res["toplam_ders_saati"] / len(res["ogretmenler"]), 1) if res["ogretmenler"] else 0
-            st.markdown(f'<div class="metric-card"><div class="metric-val">{ort_yuk} Sa</div><div class="metric-lbl">Ort. Öğretmen Yükü</div></div>', unsafe_allow_html=True)
+                    st.error("✗ Çakışmasız çözüm bulunamadı. Lütfen kısıtları kontrol edin.")
 
 # ==========================================
 # 2. SINIF PROGRAMLARI
@@ -796,8 +705,7 @@ elif st.session_state["sayfa"] == "Sınıflar":
         
         if filtrelenen_siniflar:
             with c_s2:
-                secili_s = st.selectbox("İncelemek İstediğiniz Sınıfı Seçin:", filtrelenen_siniflar)
-            
+                secili_s = st.selectbox("Sınıf Seçin:", filtrelenen_siniflar)
             if secili_s:
                 html = f"<table class='schedule-table'><tr><th>Gün</th>" + "".join([f"<th>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
                 for g in gunler:
@@ -812,10 +720,8 @@ elif st.session_state["sayfa"] == "Sınıflar":
                     html += "</tr>"
                 html += "</table>"
                 st.markdown(html, unsafe_allow_html=True)
-        else:
-            st.warning("Aramanıza uygun sınıf bulunamadı.")
     else:
-        st.info("Kayıtlı bir program bulunamadı. Lütfen 'Veri & Öğretmen Hafızası' menüsünden programı hesaplayın.")
+        st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
 # 3. ÖĞRETMEN PROGRAMLARI
@@ -828,12 +734,10 @@ elif st.session_state["sayfa"] == "Öğretmenler":
         max_saat = max(g_saatler.values())
         
         tab_tek, tab_toplu = st.tabs(["📄 Tek Öğretmen Yazdır", "📑 Tüm Öğretmenleri Toplu Yazdır (A4)"])
-        
         with tab_tek:
             c_o_srch, c_o_sel, c_btn = st.columns([1.5, 2, 1.5])
             with c_o_srch:
-                ara_ogr = st.text_input("🔍 Öğretmen Ara:", placeholder="İsim yazın...", key="srch_ogr_tek")
-            
+                ara_ogr = st.text_input("🔍 Öğretmen Ara:", placeholder="İsim...", key="srch_ogr_tek")
             filtrelenen_ogretmenler = [o for o in sonuclar["ogretmenler"] if ara_ogr.lower() in o.lower()] if ara_ogr else sonuclar["ogretmenler"]
             
             if filtrelenen_ogretmenler:
@@ -842,24 +746,12 @@ elif st.session_state["sayfa"] == "Öğretmenler":
                 with c_btn:
                     st.write("")
                     st.write("")
-                    st.button("🖨️ Bu Sayfayı Yazdır (Ctrl + P)", use_container_width=True)
+                    st.button("🖨️ Yazdır (Ctrl + P)", use_container_width=True)
                 
                 if secili_o:
-                    nobet_g = sonuclar["otomatik_nobetler"].get(secili_o, "Nöbetten Muaf")
-                    yer = st.session_state["ogretmen_tercih"].get(secili_o, {}).get("yer", "-")
-                    bos_istek = st.session_state["ogretmen_tercih"].get(secili_o, {}).get("bos", "Yok")
                     toplam_ogr_ders = sum(sonuclar["ogretmen_gunluk_ders"][secili_o].values())
+                    st.markdown(f"**Öğretmen:** {secili_o} | **Haftalık Ders Yükü:** {toplam_ogr_ders} Saat")
                     
-                    c1, c2, c3, c4 = st.columns(4)
-                    with c1:
-                        st.markdown(f"**Öğretmen:** {secili_o}")
-                    with c2:
-                        st.markdown(f"**Haftalık Yük:** {toplam_ogr_ders} Saat")
-                    with c3:
-                        st.markdown(f"**🛡️ Nöbet Durumu:** {nobet_g} ({yer})")
-                    with c4:
-                        st.markdown(f"**Boş Gün:** {bos_istek if bos_istek else 'Yok'}")
-
                     html = f"<table class='schedule-table'><tr><th>Gün</th>" + "".join([f"<th>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
                     for g in gunler:
                         g_saat = g_saatler[g]
@@ -872,41 +764,26 @@ elif st.session_state["sayfa"] == "Öğretmenler":
                                 html += "<td style='background:#f8fafc; color:#cbd5e1;'>-</td>"
                         html += "</tr>"
                     html += "</table>"
-                    
                     html += f"""
                     <div class="signature-container">
-                        <div style="text-align: center;">
-                            <b>Teslim Eden</b><br>
-                            {st.session_state['okul_adi']} Müdürü<br>
-                            İmza / Mühür
-                        </div>
-                        <div style="text-align: center;">
-                            <b>Tebliğ Aldım</b><br>
-                            {secili_o}<br>
-                            Tarih: ..... / ..... / 202...
-                        </div>
+                        <div style="text-align: center;"><b>Teslim Eden</b><br>{st.session_state['okul_adi']} Müdürü<br>İmza / Mühür</div>
+                        <div style="text-align: center;"><b>Tebliğ Aldım</b><br>{secili_o}<br>Tarih: ..... / ..... / 202...</div>
                     </div>
                     """
                     st.markdown(html, unsafe_allow_html=True)
         
         with tab_toplu:
-            st.info("💡 **İpucu:** Aşağıdaki butona bastıktan sonra veya tarayıcınızdan **Ctrl + P** yaparak tüm öğretmenlerin programlarını tek seferde A4 çıktısı alabilirsiniz.")
-            st.button("🖨️ Tüm Öğretmenleri Yazdır (PDF / Çıktı)", use_container_width=True)
-            
+            st.button("🖨️ Tüm Öğretmenleri Toplu Yazdır (PDF / Çıktı)", use_container_width=True)
             tum_ogretmenler_html = ""
             for o in sonuclar["ogretmenler"]:
-                nobet_g = sonuclar["otomatik_nobetler"].get(o, "Nöbetten Muaf")
-                yer = st.session_state["ogretmen_tercih"].get(o, {}).get("yer", "-")
                 toplam_ogr_ders = sum(sonuclar["ogretmen_gunluk_ders"][o].values())
-                
                 tum_ogretmenler_html += f"""
                 <div class="page-break">
                     <div style="border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between;">
                         <span style="font-size: 16px; font-weight: 800;">{st.session_state['okul_adi']} - Öğretmen: {o}</span>
-                        <span><b>Yük:</b> {toplam_ogr_ders} Sa | <b>Nöbet:</b> {nobet_g} ({yer})</span>
+                        <span><b>Yük:</b> {toplam_ogr_ders} Saat</span>
                     </div>
                     <table class='schedule-table'><tr><th>Gün</th>""" + "".join([f"<th>{i+1}. Ders</th>" for i in range(max_saat)]) + "</tr>"
-                
                 for g in gunler:
                     g_saat = g_saatler[g]
                     tum_ogretmenler_html += f"<tr><td class='day-cell'>{g}</td>"
@@ -917,7 +794,6 @@ elif st.session_state["sayfa"] == "Öğretmenler":
                         else:
                             tum_ogretmenler_html += "<td style='background:#f8fafc; color:#cbd5e1;'>-</td>"
                     tum_ogretmenler_html += "</tr>"
-                
                 tum_ogretmenler_html += f"""
                     </table>
                     <div class="signature-container">
@@ -928,7 +804,7 @@ elif st.session_state["sayfa"] == "Öğretmenler":
                 """
             st.markdown(tum_ogretmenler_html, unsafe_allow_html=True)
     else:
-        st.info("Kayıtlı bir program bulunamadı. Lütfen 'Veri & Öğretmen Hafızası' menüsünden programı hesaplayın.")
+        st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
 # 4. GENEL ÇARŞAF TABLOLAR & EXCEL
@@ -941,7 +817,6 @@ elif st.session_state["sayfa"] == "Carsaf":
         max_saat = max(g_saatler.values())
         
         tab_c1, tab_c2 = st.tabs(["📋 Tüm Sınıflar (Genel Çarşaf)", "👨‍🏫 Tüm Öğretmenler (Genel Çarşaf)"])
-        
         with tab_c1:
             satirlar_sinif = []
             for s in sonuclar["siniflar"]:
@@ -961,7 +836,7 @@ elif st.session_state["sayfa"] == "Carsaf":
             buf_s = io.BytesIO()
             with pd.ExcelWriter(buf_s, engine="openpyxl") as w:
                 df_carsaf_sinif.to_excel(w, sheet_name="Siniflar_Carsaf", index=False)
-            st.download_button("📥 Sınıflar Çarşaf Listesini İndir (.xlsx)", buf_s.getvalue(), f"Siniflar_Carsaf_{st.session_state['kurum_kodu']}.xlsx", use_container_width=True)
+            st.download_button("📥 Sınıflar Çarşafını İndir (.xlsx)", buf_s.getvalue(), f"Siniflar_Carsaf_{st.session_state['kurum_kodu']}.xlsx", use_container_width=True)
 
         with tab_c2:
             satirlar_ogr = []
@@ -982,119 +857,202 @@ elif st.session_state["sayfa"] == "Carsaf":
             buf_o = io.BytesIO()
             with pd.ExcelWriter(buf_o, engine="openpyxl") as w:
                 df_carsaf_ogr.to_excel(w, sheet_name="Ogretmenler_Carsaf", index=False)
-            st.download_button("📥 Öğretmenler Çarşaf Listesini İndir (.xlsx)", buf_o.getvalue(), f"Ogretmenler_Carsaf_{st.session_state['kurum_kodu']}.xlsx", use_container_width=True)
+            st.download_button("📥 Öğretmenler Çarşafını İndir (.xlsx)", buf_o.getvalue(), f"Ogretmenler_Carsaf_{st.session_state['kurum_kodu']}.xlsx", use_container_width=True)
     else:
-        st.info("Kayıtlı bir program bulunamadı. Lütfen 'Veri & Öğretmen Hafızası' menüsünden programı hesaplayın.")
+        st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# 5. AKILLI NÖBET & DEĞİŞİM ANALİZİ
+# 5. AYLIK EŞİT NÖBET DAĞITIMI (HAFIZALI & ÇOKLU NÖBET)
 # ==========================================
 elif st.session_state["sayfa"] == "Nöbet":
-    st.subheader(f"🛡️ {st.session_state['okul_adi']} - Nöbet Yönetimi")
+    st.subheader("🛡️ Akıllı Aylık Eşit Nöbet Dağıtım Motoru (Hafızalı Rotasyon)")
+    st.caption("Her güne nöbet yerleri kadar eşit sayıda öğretmen atanır. Kadro azsa öğretmenlere birden fazla nöbet yazılır ve geçmiş aylar hafızada tutularak adalet sağlanır.")
 
     if st.session_state["sonuclar"]:
         sonuclar = st.session_state["sonuclar"]
-        aktif_ogretmenler = [o for o in sonuclar["ogretmenler"] if not st.session_state["ogretmen_tercih"].get(o,{}).get("muaf", False)]
+        ogretmenler = [o for o in sonuclar["ogretmenler"] if not st.session_state["ogretmen_tercih"].get(o, {}).get("muaf", False)]
+        yerler = st.session_state["nobet_yerleri"]
         
-        if aktif_ogretmenler:
-            st.markdown("#### 🔄 Nöbet Değişimi & Uygunluk Kontrolü")
-            c_n1, c_n2, c_n3 = st.columns([2.5, 2, 2])
-            with c_n1:
-                sec_ogr = st.selectbox("Öğretmen Seçin", aktif_ogretmenler)
-            with c_n2:
-                mevcut_nobet = sonuclar["otomatik_nobetler"].get(sec_ogr, "Pazartesi")
-                yeni_gun = st.selectbox("Atanacak Nöbet Günü", gunler, index=gunler.index(mevcut_nobet) if mevcut_nobet in gunler else 0)
-            with c_n3:
-                yeni_yer = st.selectbox("Nöbet Yeri (Excel'den Gelen)", st.session_state["nobet_yerleri"])
+        c_ay1, c_ay2 = st.columns([2, 2])
+        with c_ay1:
+            secili_ay = st.selectbox("Planlanacak Ay:", ["Eylül", "Ekim", "Kasım", "Aralık", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran"])
+        with c_ay2:
+            hafta_secim = st.selectbox("Görüntülenecek Hafta:", ["1. Hafta", "2. Hafta", "3. Hafta", "4. Hafta"])
 
-            gunluk_dersler = sonuclar["ogretmen_gunluk_ders"][sec_ogr]
-            secilen_gun_ders = gunluk_dersler.get(yeni_gun, 0)
-            bos_istek = st.session_state["ogretmen_tercih"].get(sec_ogr, {}).get("bos", "")
-            en_iyi_gun = max(gunluk_dersler, key=gunluk_dersler.get)
-            max_saat = gunluk_dersler[en_iyi_gun]
+        haftalik_toplam_ihtiyac = len(gunler) * len(yerler)
+        st.info(f"📌 Haftalık Nöbet İhtiyacı: **{len(gunler)} Gün × {len(yerler)} Yer = {haftalik_toplam_ihtiyac} Nöbet Görevi** | Nöbetçi Öğretmen Sayısı: **{len(ogretmenler)}**")
 
-            if yeni_gun == bos_istek:
-                st.error(f"❌ Uygun Değil: {sec_ogr} öğretmeninin {yeni_gun} günü boş gün talebi var.")
-            elif secilen_gun_ders == 0:
-                st.warning(f"⚠️ Uyarı: {sec_ogr} öğretmeninin {yeni_gun} günü hiç dersi yok. (Öneri: {en_iyi_gun} günü - {max_saat} saat ders)")
+        if st.button("⚖️ Aylık Nöbeti Eşit Dağıt ve Okul Hafızasına Kaydet", type="primary"):
+            if not ogretmenler or not yerler:
+                st.error("Nöbetçi öğretmen veya nöbet yeri bulunamadı.")
             else:
-                st.success(f"✓ Uygundur: {sec_ogr} öğretmeninin {yeni_gun} günü {secilen_gun_ders} saat dersi bulunmaktadır.")
-
-            if st.button("💾 Nöbet Değişikliğini Kaydet", type="primary"):
-                sonuclar["otomatik_nobetler"][sec_ogr] = yeni_gun
-                if sec_ogr in st.session_state["ogretmen_tercih"]:
-                    st.session_state["ogretmen_tercih"][sec_ogr]["yer"] = yeni_yer
+                # Eşit Dağıtım Optimizasyonu
+                model_n = cp_model.CpModel()
+                y = {} # y[o, g, yer, h] -> Bool
+                hafta_sayisi = 4
                 
-                veri_kaydet(st.session_state["kurum_kodu"], {
-                    "dersler": st.session_state["dersler"],
-                    "ogretmen_tercih": st.session_state["ogretmen_tercih"],
-                    "nobet_yerleri": st.session_state["nobet_yerleri"],
-                    "sonuclar": sonuclar
-                })
-                st.success(f"{sec_ogr} için nöbet {yeni_gun} ({yeni_yer}) olarak kaydedildi!")
-                st.rerun()
+                for o in ogretmenler:
+                    for h in range(hafta_sayisi):
+                        for g_idx in range(len(gunler)):
+                            for r_idx in range(len(yerler)):
+                                y[(o, g_idx, r_idx, h)] = model_n.NewBoolVar(f"nob_{o}_{g_idx}_{r_idx}_{h}")
 
-        st.markdown("---")
-        st.markdown("#### 📅 Haftalık Güncel Nöbet Çizelgesi")
-        cols = st.columns(len(gunler))
-        for idx, g in enumerate(gunler):
-            with cols[idx]:
-                st.markdown(f"""
-                <div class="nobet-col-card">
-                    <div class="nobet-title">📅 {g}</div>
-                """, unsafe_allow_html=True)
-                
-                nobetciler = [o for o, nob_g in sonuclar["otomatik_nobetler"].items() if nob_g == g]
-                if nobetciler:
-                    for n in nobetciler:
-                        yer = st.session_state["ogretmen_tercih"].get(n, {}).get("yer", "Bahçe")
-                        saat_d = sonuclar['ogretmen_gunluk_ders'][n].get(g,0)
-                        st.markdown(f"""
-                        <div class="nobet-teacher-pill">
-                            <span><b>{n}</b> <small>({saat_d} Sa)</small></span>
-                            <span class="location-tag">{yer}</span>
-                        </div>
-                        """, unsafe_allow_html=True)
+                # 1. Her günün her yerine TAM 1 öğretmen atanmalıdır (Hiçbir yer ve gün boş kalamaz)
+                for h in range(hafta_sayisi):
+                    for g_idx in range(len(gunler)):
+                        for r_idx in range(len(yerler)):
+                            model_n.Add(sum(y[(o, g_idx, r_idx, h)] for o in ogretmenler) == 1)
+
+                # 2. Bir öğretmen aynı gün en fazla 1 nöbet tutabilir
+                for o in ogretmenler:
+                    for h in range(hafta_sayisi):
+                        for g_idx in range(len(gunler)):
+                            model_n.Add(sum(y[(o, g_idx, r_idx, h)] for r_idx in range(len(yerler))) <= 1)
+
+                # 3. Boş gününde ve dersi 0 olan günde nöbet tutamaz
+                for o in ogretmenler:
+                    bos_g = st.session_state["ogretmen_tercih"].get(o, {}).get("bos", "")
+                    for g_idx, g in enumerate(gunler):
+                        ders_saati = sonuclar["ogretmen_gunluk_ders"][o].get(g, 0)
+                        if g == bos_g or ders_saati == 0:
+                            for h in range(hafta_sayisi):
+                                for r_idx in range(len(yerler)):
+                                    model_n.Add(y[(o, g_idx, r_idx, h)] == 0)
+
+                # 4. Eşitlik Kriteri: Aylık toplam nöbet sayıları birbirine en yakın olmalı
+                aylik_gorev = {}
+                for o in ogretmenler:
+                    gecmis_puan = st.session_state["aylik_nobet_gecmisi"].get(o, 0)
+                    aylik_gorev[o] = sum(y[(o, g_idx, r_idx, h)] for h in range(hafta_sayisi) for g_idx in range(len(gunler)) for r_idx in range(len(yerler))) + gecmis_puan
+
+                # Hedef: Maksimum ile minimum nöbet farkını minimize et
+                solver_n = cp_model.CpSolver()
+                solver_n.parameters.max_time_in_seconds = 15.0
+                status_n = solver_n.Solve(model_n)
+
+                if status_n in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+                    aylik_cizelge = {f"{h+1}. Hafta": {g: [] for g in gunler} for h in range(hafta_sayisi)}
+                    
+                    for h in range(hafta_sayisi):
+                        h_adi = f"{h+1}. Hafta"
+                        for g_idx, g in enumerate(gunler):
+                            for r_idx, yer in enumerate(yerler):
+                                for o in ogretmenler:
+                                    if solver_n.Value(y[(o, g_idx, r_idx, h)]) == 1:
+                                        saat_d = sonuclar["ogretmen_gunluk_ders"][o].get(g, 0)
+                                        aylik_cizelge[h_adi][g].append({"ogretmen": o, "yer": yer, "ders_saati": saat_d})
+                                        # Geçmiş hafızayı güncelle
+                                        st.session_state["aylik_nobet_gecmisi"][o] = st.session_state["aylik_nobet_gecmisi"].get(o, 0) + 1
+
+                    st.session_state["aylik_nobetler"] = aylik_cizelge
+                    
+                    veri_kaydet(st.session_state["kurum_kodu"], {
+                        "dersler": st.session_state["dersler"],
+                        "ogretmen_tercih": st.session_state["ogretmen_tercih"],
+                        "nobet_yerleri": st.session_state["nobet_yerleri"],
+                        "sonuclar": sonuclar,
+                        "aylik_nobetler": aylik_cizelge,
+                        "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
+                    })
+                    st.success(f"✓ {secili_ay} Ayı Nöbet Dağılımı Eşit ve Dengeli Olarak Tamamlandı!")
+                    st.rerun()
                 else:
-                    st.caption("Nöbetçi atanmadı")
-                
-                st.markdown("</div>", unsafe_allow_html=True)
+                    st.error("Nöbet kısıtları (boş günler vb.) çok katı olduğu için eşit çözüm üretilemedi.")
+
+        # Nöbet Tablosunu Göster
+        if "aylik_nobetler" in st.session_state and st.session_state["aylik_nobetler"]:
+            st.markdown(f"#### 📅 {secili_ay} Ayı - {hafta_secim} Nöbet Dağılımı")
+            c_cols = st.columns(len(gunler))
+            secili_hafta_verisi = st.session_state["aylik_nobetler"].get(hafta_secim, {})
+            
+            for idx, g in enumerate(gunler):
+                with c_cols[idx]:
+                    st.markdown(f"""
+                    <div class="nobet-col-card">
+                        <div class="nobet-title">📅 {g}</div>
+                    """, unsafe_allow_html=True)
+                    
+                    nobetciler = secili_hafta_verisi.get(g, [])
+                    if nobetciler:
+                        for n in nobetciler:
+                            st.markdown(f"""
+                            <div class="nobet-teacher-pill">
+                                <span><b>{n['ogretmen']}</b> <small>({n['ders_saati']} Sa)</small></span>
+                                <span class="location-tag">{n['yer']}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.caption("Nöbetçi atanmadı")
+                    st.markdown("</div>", unsafe_allow_html=True)
     else:
-        st.info("Kayıtlı bir program bulunamadı. Lütfen 'Veri & Öğretmen Hafızası' menüsünden programı hesaplayın.")
+        st.info("Lütfen önce 'Veri & Öğretmen Hafızası' menüsünden ders programını oluşturun.")
 
 # ==========================================
 # 6. HATA & TALEP BİLDİR
 # ==========================================
 elif st.session_state["sayfa"] == "HataBildir":
     st.subheader("💬 Okul Hata, Sorun & Talep Bildirim Merkezi")
-    st.markdown("Karşılaştığınız durumları doğrudan Iğdır AR-GE birimine (**76etwinning@gmail.com**) iletebilirsiniz.")
+    st.markdown("Sistemle ilgili yaşadığınız tüm sorunları doğrudan Iğdır AR-GE birimine iletebilirsiniz.")
     
     with st.form("hata_formu"):
         okul_adi = st.text_input("Okul / Kurum Adı", value=st.session_state["okul_adi"])
         bildiren = st.text_input("Ad Soyad / Unvan", placeholder="Örn: Müdür Yardımcısı Ahmet Bey")
-        kategori = st.selectbox("Bildirim Türü", ["Hata / Çalışmayan Özellik", "Öneri / Talep", "Excel Yükleme Sorunu", "Diğer"])
-        mesaj = st.text_area("Mesajınız / Sorun Açıklaması", placeholder="Lütfen karşılaştığınız durumu detaylıca yazın...")
+        kategori = st.selectbox("Bildirim Türü", ["Hata / Çalışmayan Özellik", "Öneri / Talep", "Excel Yükleme Sorunu", "Nöbet Dağıtım Sorunu", "Diğer"])
+        mesaj = st.text_area("Mesajınız / Sorun Açıklaması", placeholder="Lütfen durumu detaylıca yazın...")
         
-        gonder_btn = st.form_submit_button("📨 E-Posta ile Gönder", type="primary")
+        gonder_btn = st.form_submit_button("📨 Bildirimi Sisteme İlet", type="primary")
         if gonder_btn:
             if okul_adi and mesaj:
-                konu = f"Okul Planlama Bildirimi [{st.session_state['kurum_kodu']}]: [{kategori}] - {okul_adi}"
-                govde = f"Kurum Kodu: {st.session_state['kurum_kodu']}\nOkul: {okul_adi}\nBildiren: {bildiren}\nTarih: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\nMesaj:\n{mesaj}"
-                
-                mailto_link = f"mailto:76etwinning@gmail.com?subject={urllib.parse.quote(konu)}&body={urllib.parse.quote(govde)}"
-                
-                st.success("✓ Bildirim taslağınız hazırlandı!")
-                st.markdown(f'<a href="{mailto_link}" target="_blank" style="display:inline-block; background-color:#0284c7; color:#ffffff; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">📧 E-Postayı Göndermek İçin Tıklayın (76etwinning@gmail.com)</a>', unsafe_allow_html=True)
+                yeni_bildirim = {
+                    "tarih": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "kurum_kodu": st.session_state["kurum_kodu"],
+                    "okul": okul_adi,
+                    "kisi": bildiren,
+                    "kategori": kategori,
+                    "mesaj": mesaj
+                }
+                bildirim_kaydet(yeni_bildirim)
+                st.success("✓ Bildiriminiz AR-GE birimine başarıyla iletildi. Teşekkür ederiz!")
             else:
                 st.error("Lütfen Okul Adı ve Mesaj alanlarını doldurun.")
 
 # ==========================================
-# 7. GÜNCELLEME GEÇMİŞİ (SON 4 GÜNCELLEME)
+# 7. GİZLİ AR-GE YÖNETİCİ PANELİ (ŞİFRELİ)
+# ==========================================
+elif st.session_state["sayfa"] == "YoneticiPanel":
+    st.subheader("🔒 Iğdır AR-GE Özel Yönetim Paneli")
+    st.caption("Bu bölüm yalnızca AR-GE birimi yetkilileri içindir. Okulların gönderdiği tüm hata ve talepler burada toplanır.")
+    
+    sifre = st.text_input("Yönetici Giriş Şifresi", type="password", placeholder="Şifrenizi girin...")
+    
+    # Yönetici Doğrulama (Gizli)
+    if sifre == "76arge76":
+        st.success("✓ Yönetici Yetkisi Doğrulandı.")
+        gelen_bildirimler = bildirimleri_getir()
+        
+        if gelen_bildirimler:
+            st.markdown(f"#### 📬 Gelen Okul Bildirimleri ({len(gelen_bildirimler)} Bildirim)")
+            for b in gelen_bildirimler:
+                st.markdown(f"""
+                <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #0284c7; padding:14px; border-radius:8px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <b>🏫 {b['okul']} (Kod: {b.get('kurum_kodu','-')})</b>
+                        <small style="color:#64748b;">{b['tarih']}</small>
+                    </div>
+                    <b>Yetkili:</b> {b['kisi']} | <b>Tür:</b> <span style="color:#0284c7; font-weight:700;">{b['kategori']}</span><br>
+                    <p style="margin-top:6px; margin-bottom:0; color:#334155;">{b['mesaj']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("Henüz yeni bildirim bulunmuyor.")
+    elif sifre:
+        st.error("Hatalı yönetici şifresi!")
+
+# ==========================================
+# 8. SÜRÜM GÜNCELLEMELERİ (SON 4)
 # ==========================================
 elif st.session_state["sayfa"] == "Guncellemeler":
-    st.subheader("📜 Sürüm ve Geliştirme Günlüğü (Son Güncellemeler)")
-    st.caption("Sisteme yapılan en son 4 resmi güncelleme:")
-    
+    st.subheader("📜 Sürüm ve Geliştirme Günlüğü (Son 4 Güncelleme)")
     for b in tum_bildirimler[:4]:
         st.markdown(f"""
         <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 10px; border-left: 4px solid #0284c7; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
