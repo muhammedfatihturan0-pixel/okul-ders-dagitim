@@ -53,11 +53,10 @@ def bildirimleri_getir():
             return []
     return []
 
-# Güvenli Şifre Kontrolü (asfa9592)
 def sifre_dogrula(girilen_sifre):
     return str(girilen_sifre).strip() == "asfa9592"
 
-# Oturum Durumu Başlatma
+# Oturum Durumu
 if "giris_yapildi" not in st.session_state:
     st.session_state["giris_yapildi"] = False
 
@@ -80,7 +79,6 @@ if "ogretmen_tercih" not in st.session_state:
     st.session_state["ogretmen_tercih"] = {}
 
 if "kapali_saatler" not in st.session_state:
-    # Yapı: {"Ahmet Yılmaz": {"Pazartesi": [1, 2], "Salı": [5, 6]}}
     st.session_state["kapali_saatler"] = {}
 
 if "nobet_yerleri" not in st.session_state:
@@ -95,6 +93,7 @@ if "aylik_nobet_gecmisi" not in st.session_state:
 gunler = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
 
 tum_bildirimler = [
+    {"tarih": "2026-08-31", "baslik": "v1.3 - Kullanım Kılavuzu & Tam Excel Yedekleme", "icerik": "Nasıl kullanılır rehberi ve sunucu uyku moduna karşı tam okul yedeği indirme/yükleme modülü eklendi."},
     {"tarih": "2026-08-28", "baslik": "v1.2 - Öğretmen Gün & Saat Kapatma Özelliği", "icerik": "Öğretmenlere gün ve ders saati bazında özel kapatma/kilitleme kısıtları eklendi."},
     {"tarih": "2026-08-28", "baslik": "v1.1 - Hafıza & Nöbet Rotasyon İyileştirmesi", "icerik": "Kurumsal oturum hafızası, aylık eşit nöbet dağıtımı ve performans optimizasyonları yapıldı."}
 ]
@@ -184,6 +183,16 @@ if not st.session_state["giris_yapildi"]:
                 else:
                     st.error("Lütfen MEB Kurum Kodu ve Kurum İsmi alanlarını doldurun.")
 
+        # Hızlı Kullanım Rehberi (Açılır Kutu)
+        with st.expander("📖 Nasıl Kullanılır? (Kısa Rehber)", expanded=False):
+            st.markdown("""
+            1. **Giriş:** Kurum kodunuzu ve okul adınızı girerek sisteme giriş yapın.
+            2. **Excel Yükleme:** Şablonu indirip sınıf ve ders dağılımlarını girin (Örn: `2+2+2`).
+            3. **Kısıtlar & Kapatma:** Boş günleri, nöbet muafiyetlerini ve kapatılacak ders saatlerini belirleyin.
+            4. **Hesaplama:** Motoru çalıştırarak sıfır çakışmalı haftalık ders programını ve nöbet rotasyonunu oluşturun.
+            5. **Yedek Alma:** Verilerinizin her zaman güvende kalması için 'Yedek İndir' butonuyla Excel yedeğinizi bilgisayarınıza kaydedin.
+            """)
+
         st.markdown("---")
         st.markdown("#### 📢 Sistem Bilgilendirmesi")
         for b in tum_bildirimler:
@@ -242,6 +251,7 @@ with st.sidebar:
         ("👨‍🏫 Öğretmen Programları (A4)", "Öğretmenler"),
         ("📊 Genel Çarşaf Tablo & Excel", "Carsaf"),
         ("🛡️ Aylık Eşit Nöbet Dağıtımı", "Nöbet"),
+        ("📖 Nasıl Kullanılır? (Kılavuz)", "Rehber"),
         ("💬 Hata & Talep Bildir", "HataBildir")
     ]
     
@@ -279,6 +289,33 @@ st.markdown(f"""
 if st.session_state["sayfa"] == "Veri":
     st.subheader("📥 Veri Girişi & Okul Hafızası")
     
+    # Sunucu Uykusuna Karşı Tam Veritabanı Yedeği
+    st.info("💡 **Veri Güvenliği:** Sunucunun uyku moduna geçmesi veya sıfırlanması durumunda verilerinizin kaybolmaması için aşağıdaki butondan okulunuzun tam yedeğini bilgisayarınıza indirebilirsiniz.")
+    
+    sablon_d = st.session_state["dersler"] if st.session_state["dersler"] else [{"Sınıf": "9-A", "Ders": "Matematik", "Öğretmen": "Ahmet Yılmaz", "Saat Dağılımı": "2+2+2"}]
+    sablon_o = [{"Öğretmen": k, "Boş Gün İsteği": v.get("bos", ""), "Zaman Kısıtı": v.get("zaman", "Tüm Gün"), "Nöbetten Muaf": "Evet" if v.get("muaf") else "Hayır"} for k, v in st.session_state["ogretmen_tercih"].items()] if st.session_state["ogretmen_tercih"] else [{"Öğretmen": "Ahmet Yılmaz", "Boş Gün İsteği": "", "Zaman Kısıtı": "Tüm Gün", "Nöbetten Muaf": "Hayır"}]
+    sablon_yerler = [{"Nöbet Yeri Adı": y} for y in st.session_state["nobet_yerleri"] if y != "-"]
+    sablon_kapali = [{"Öğretmen": ogr, "Gün": g, "Kapalı Saatler": ",".join(map(str, s_list))} for ogr, g_dict in st.session_state["kapali_saatler"].items() for g, s_list in g_dict.items() if s_list]
+    if not sablon_kapali:
+        sablon_kapali = [{"Öğretmen": "Ahmet Yılmaz", "Gün": "Salı", "Kapalı Saatler": "1,2"}]
+
+    buf_yedek = io.BytesIO()
+    with pd.ExcelWriter(buf_yedek, engine="openpyxl") as writer:
+        pd.DataFrame(sablon_d).to_excel(writer, sheet_name="Ders_Listesi", index=False)
+        pd.DataFrame(sablon_o).to_excel(writer, sheet_name="Ogretmenler", index=False)
+        pd.DataFrame(sablon_yerler).to_excel(writer, sheet_name="Nobet_Yerleri", index=False)
+        pd.DataFrame(sablon_kapali).to_excel(writer, sheet_name="Kapali_Saatler", index=False)
+
+    st.download_button(
+        "💾 Tüm Okul Verilerini ve Kısıtlarını Bilgisayarına Yedekle (.xlsx)",
+        data=buf_yedek.getvalue(),
+        file_name=f"Okul_Tam_Yedek_{st.session_state['kurum_kodu']}.xlsx",
+        use_container_width=True,
+        type="primary"
+    )
+
+    st.markdown("---")
+
     mevcut_ogretmenler = sorted(list(set([d["Öğretmen"] for d in st.session_state["dersler"]])))
     if mevcut_ogretmenler:
         with st.expander("🔄 Hızlı Öğretmen Değişimi (Öğretmen Ayrıldı / Yeni Öğretmen Geldi)", expanded=False):
@@ -315,31 +352,10 @@ if st.session_state["sayfa"] == "Veri":
     c_card1, c_card2 = st.columns([1, 1])
     with c_card1:
         st.markdown("##### 📥 Excel Şablonu")
-        st.caption("Dersleri, nöbet yerlerini ve öğretmenlerin kapalı saatlerini bu şablondan girebilirsiniz:")
-        sablon_d = st.session_state["dersler"] if st.session_state["dersler"] else [{"Sınıf": "9-A", "Ders": "Matematik", "Öğretmen": "Ahmet Yılmaz", "Saat Dağılımı": "2+2+2"}]
-        sablon_o = [{"Öğretmen": k, "Boş Gün İsteği": v.get("bos", ""), "Zaman Kısıtı": v.get("zaman", "Tüm Gün"), "Nöbetten Muaf": "Evet" if v.get("muaf") else "Hayır"} for k, v in st.session_state["ogretmen_tercih"].items()] if st.session_state["ogretmen_tercih"] else [{"Öğretmen": "Ahmet Yılmaz", "Boş Gün İsteği": "", "Zaman Kısıtı": "Tüm Gün", "Nöbetten Muaf": "Hayır"}]
-        sablon_yerler = [{"Nöbet Yeri Adı": y} for y in st.session_state["nobet_yerleri"] if y != "-"]
-        
-        # Kapalı saatler Excel sayfası
-        sablon_kapali = []
-        for ogr, g_dict in st.session_state["kapali_saatler"].items():
-            for g, s_list in g_dict.items():
-                if s_list:
-                    sablon_kapali.append({"Öğretmen": ogr, "Gün": g, "Kapalı Saatler": ",".join(map(str, s_list))})
-        if not sablon_kapali:
-            sablon_kapali = [{"Öğretmen": "Ahmet Yılmaz", "Gün": "Salı", "Kapalı Saatler": "1,2"}]
-        
-        buf_sablon = io.BytesIO()
-        with pd.ExcelWriter(buf_sablon, engine="openpyxl") as writer:
-            pd.DataFrame(sablon_d).to_excel(writer, sheet_name="Ders_Listesi", index=False)
-            pd.DataFrame(sablon_o).to_excel(writer, sheet_name="Ogretmenler", index=False)
-            pd.DataFrame(sablon_yerler).to_excel(writer, sheet_name="Nobet_Yerleri", index=False)
-            pd.DataFrame(sablon_kapali).to_excel(writer, sheet_name="Kapali_Saatler", index=False)
-        
-        st.download_button("📥 Excel Şablonunu İndir (.xlsx)", buf_sablon.getvalue(), f"Okul_Sablon_{st.session_state['kurum_kodu']}.xlsx", use_container_width=True)
+        st.download_button("📥 Boş Şablon İndir (.xlsx)", buf_yedek.getvalue(), f"Okul_Sablon_{st.session_state['kurum_kodu']}.xlsx", use_container_width=True)
 
     with c_card2:
-        st.markdown("##### 📤 Doldurulan Excel'i Yükle")
+        st.markdown("##### 📤 Doldurulan Excel'i veya Yedeği Yükle")
         uploaded_file = st.file_uploader("Dosyayı buraya bırakın", type=["xlsx", "xls"])
         if uploaded_file is not None:
             try:
@@ -353,7 +369,6 @@ if st.session_state["sayfa"] == "Veri":
                     if yerler:
                         st.session_state["nobet_yerleri"] = yerler
                 
-                # Kapalı Saatleri Excel'den Çek
                 if "Kapali_Saatler" in xls.sheet_names:
                     df_k = pd.read_excel(xls, sheet_name="Kapali_Saatler").fillna("")
                     for _, r in df_k.iterrows():
@@ -386,7 +401,7 @@ if st.session_state["sayfa"] == "Veri":
                     "sonuclar": st.session_state["sonuclar"],
                     "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                 })
-                st.success("✓ Veriler ve kapalı saatler aktarıldı!")
+                st.success("✓ Veriler ve kısıtlar başarıyla yüklendi!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Excel şablon formatı geçersiz: {e}")
@@ -456,8 +471,6 @@ elif st.session_state["sayfa"] == "Kapatma":
                 st.session_state["kapali_saatler"][sec_ogr_kilit] = {}
             
             st.markdown(f"##### 🕒 {sec_ogr_kilit} İçin Kapatılacak Ders Saatleri")
-            max_s = max(gunluk_saatler.values())
-            
             for g in gunler:
                 g_saat = gunluk_saatler[g]
                 mevcut_kapali = st.session_state["kapali_saatler"][sec_ogr_kilit].get(g, [])
@@ -484,12 +497,44 @@ elif st.session_state["sayfa"] == "Kapatma":
                     "sonuclar": st.session_state["sonuclar"],
                     "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                 })
-                st.success(f"✓ {sec_ogr_kilit} için saat kısıtları başarıyla kaydedildi!")
+                st.success(f"✓ {sec_ogr_kilit} için saat kısıtları kaydedildi!")
     else:
         st.info("Lütfen önce 'Veri & Öğretmen Hafızası' menüsünden ders listesi ekleyin.")
 
 # ==========================================
-# OPTİMİZASYON VE HESAPLAMA MOTORU (KİLİTLİ SAATLER DAHİL)
+# 3. KULLANIM KILAVUZU (NASIL KULLANILIR?)
+# ==========================================
+elif st.session_state["sayfa"] == "Rehber":
+    st.subheader("📖 Akıllı Okul Planlama Sistemi - Kullanım Kılavuzu")
+    
+    st.markdown("""
+    ### 🚀 5 Adımda Kusursuz Ders & Nöbet Dağıtımı
+    
+    #### 1️⃣ Excel ile Veri Girişi
+    * **'Veri & Öğretmen Hafızası'** menüsündeki **Excel Şablonu İndir** butonuna tıklayın.
+    * `Ders_Listesi` sayfasına sınıfları, dersleri, öğretmenleri ve **Saat Dağılımını** (Örn: `2+2+2`, `2+2+1`, `2+1` veya `2`) girin.
+    * `Nobet_Yerleri` sayfasına okulunuzun nöbet alanlarını (Bahçe, 1. Kat, Pansiyon vb.) yazın.
+    * Doldurduğunuz dosyayı **Excel'i Yükle** alanına sürükleyin.
+    
+    #### 2️⃣ Öğretmen Kısıtları & İzinler
+    * Öğretmenlerin boş gün taleplerini (`Pazartesi`, `Cuma` vb.) seçebilirsiniz.
+    * Zaman kısıtını (`Sadece Sabah`, `Sadece Öğle`) ayarlayabilirsiniz.
+    * Nöbetten muaf olan öğretmenleri (hamilelik, idare vb.) **Muaf** olarak işaretleyebilirsiniz.
+    
+    #### 3️⃣ Gün ve Saat Kilitleme (Kapatma)
+    * Bir öğretmenin belirli gün ve saatlerde dersi olmasını istemiyorsanız **'Öğretmen Gün/Saat Kapatma'** menüsünden o saatleri seçip kilitleyebilirsiniz.
+    
+    #### 4️⃣ Çakışmasız Hesaplama
+    * **'Çakışmasız Ders Programını Hesapla'** butonuna bastığınızda matematiksel optimizasyon motoru saniyeler içinde sıfır çakışmalı programı üretir ve okul hafızasına kaydeder.
+    
+    #### 5️⃣ Yazdırma & Veri Yedekleme
+    * **Öğretmen Programları:** Tek tıkla tüm öğretmenler için resmî tebliğ imzalı A4 çıktısı alın.
+    * **Genel Çarşaf:** Tüm okulun haftalık tablosunu Excel olarak indirin.
+    * **Tam Yedek:** Sunucu kapansa bile verilerinizin güvende kalması için 'Veri' menüsünden Excel yedeğinizi bilgisayarınıza indirin.
+    """)
+
+# ==========================================
+# OPTİMİZASYON VE HESAPLAMA MOTORU
 # ==========================================
 if st.session_state["sayfa"] in ["Veri", "Kapatma"] and st.session_state["dersler"]:
     st.markdown("<br>", unsafe_allow_html=True)
@@ -557,7 +602,7 @@ if st.session_state["sayfa"] in ["Veri", "Kapatma"] and st.session_state["dersle
                             akt_p = sum([x[(b_idx, (t-1) - off)] for b_idx, blok in enumerate(blok_listesi) if blok["sinif"] == s for off in range(blok["sure"]) if (t-1) - off >= 0])
                             model.Add(akt_t <= akt_p)
 
-                # Boş Gün, Zaman Kısıtı ve ÖZEL KAPALI SAATLER
+                # Boş Gün, Zaman Kısıtı ve Özel Kapalı Saatler
                 for ogr in ogretmenler:
                     trc = st.session_state["ogretmen_tercih"].get(ogr, {})
                     bos_g = trc.get("bos", "")
@@ -588,7 +633,6 @@ if st.session_state["sayfa"] in ["Veri", "Kapatma"] and st.session_state["dersle
                                     if blok["ogretmen"] == ogr:
                                         model.Add(x[(b_idx, t)] == 0)
 
-                        # Özel Kapalı Ders Saatleri Kilidi (1. ders, 2. ders vb.)
                         kapali_saatler_gun = kapali_dict.get(g, [])
                         for k_saat in kapali_saatler_gun:
                             saat_idx = k_saat - 1
@@ -638,13 +682,13 @@ if st.session_state["sayfa"] in ["Veri", "Kapatma"] and st.session_state["dersle
                         "sonuclar": sonuclar,
                         "aylik_nobet_gecmisi": st.session_state["aylik_nobet_gecmisi"]
                     })
-                    st.success("✓ Ders Programı Kapalı Saat Kısıtlarına Tam Uyumlu Olarak Oluşturuldu!")
+                    st.success("✓ Ders Programı Başarıyla Oluşturuldu ve Okul Hafızasına Kaydedildi!")
                 else:
                     st.session_state["sonuclar"] = None
                     st.error("✗ Çakışmasız çözüm bulunamadı. Lütfen kapalı saatleri veya kısıtları gevşetiniz.")
 
 # ==========================================
-# 3. SINIF PROGRAMLARI
+# 4. SINIF PROGRAMLARI
 # ==========================================
 elif st.session_state["sayfa"] == "Sınıflar":
     st.subheader(f"🎓 {st.session_state['okul_adi']} - Sınıf Ders Programları")
@@ -680,7 +724,7 @@ elif st.session_state["sayfa"] == "Sınıflar":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# 4. ÖĞRETMEN PROGRAMLARI
+# 5. ÖĞRETMEN PROGRAMLARI
 # ==========================================
 elif st.session_state["sayfa"] == "Öğretmenler":
     st.subheader(f"👨‍🏫 {st.session_state['okul_adi']} - Öğretmen Ders Programları & Tebliğ")
@@ -763,7 +807,7 @@ elif st.session_state["sayfa"] == "Öğretmenler":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# 5. GENEL ÇARŞAF TABLOLAR & EXCEL
+# 6. GENEL ÇARŞAF TABLOLAR & EXCEL
 # ==========================================
 elif st.session_state["sayfa"] == "Carsaf":
     st.subheader(f"📊 {st.session_state['okul_adi']} - Genel Çarşaf Listesi")
@@ -818,7 +862,7 @@ elif st.session_state["sayfa"] == "Carsaf":
         st.info("Kayıtlı program bulunamadı.")
 
 # ==========================================
-# 6. AYLIK EŞİT NÖBET DAĞITIMI
+# 7. AYLIK EŞİT NÖBET DAĞITIMI
 # ==========================================
 elif st.session_state["sayfa"] == "Nöbet":
     st.subheader("🛡️ Akıllı Aylık Eşit Nöbet Dağıtım Motoru")
@@ -932,7 +976,7 @@ elif st.session_state["sayfa"] == "Nöbet":
         st.info("Lütfen önce ders programını oluşturun.")
 
 # ==========================================
-# MODÜL 7: HATA & TALEP BİLDİR
+# 8. HATA & TALEP BİLDİR
 # ==========================================
 elif st.session_state["sayfa"] == "HataBildir":
     st.subheader("💬 Okul Hata, Sorun & Talep Bildirim Merkezi")
